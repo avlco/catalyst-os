@@ -1,0 +1,4 @@
+{
+  "name": "generate-content-from-raw-input",
+  "entry": "index.ts"
+}

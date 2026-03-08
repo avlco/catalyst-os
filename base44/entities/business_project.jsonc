@@ -1,0 +1,26 @@
+// E08 — BusinessProject
+{
+  "name": "BusinessProject",
+  "type": "object",
+  "properties": {
+    "client_id": { "type": "string", "description": "Related Client ID" },
+    "name": { "type": "string", "maxLength": 100 },
+    "type": { "type": "string", "enum": ["consulting", "development", "both"] },
+    "status": { "type": "string", "enum": ["scoping", "active", "on_hold", "completed", "cancelled"], "default": "scoping" },
+    "health": { "type": "string", "enum": ["green", "yellow", "red"], "default": "green" },
+    "scope_description": { "type": "string" },
+    "out_of_scope": { "type": "string" },
+    "start_date": { "type": "string" },
+    "deadline": { "type": "string" },
+    "budget_total": { "type": "number", "default": 0, "description": "PII — total contract ILS" },
+    "budget_spent": { "type": "number", "default": 0, "description": "PII — spent ILS" },
+    "payment_terms": { "type": "string" },
+    "hourly_rate": { "type": "number", "default": 0 },
+    "hours_estimated": { "type": "number", "default": 0 },
+    "hours_actual": { "type": "number", "default": 0 },
+    "contract_url": { "type": "string" },
+    "weekly_update_day": { "type": "string", "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"], "default": "sunday" },
+    "language": { "type": "string", "enum": ["he", "en"], "default": "he" }
+  },
+  "required": ["client_id", "name", "type", "status", "health"]
+}

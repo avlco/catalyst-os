@@ -1,0 +1,5 @@
+{
+  "name": "verify-github-connection",
+  "entry": "index.ts",
+  "description": "Verifies GitHub connector is set up and returns user profile info"
+}

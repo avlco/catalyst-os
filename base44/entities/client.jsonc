@@ -1,0 +1,31 @@
+// E06 — Client: PII Entity — Enhanced Security
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "maxLength": 100, "description": "Full contact name" },
+    "company": { "type": "string", "maxLength": 100 },
+    "email": { "type": "string", "description": "PII — encrypted, primary contact" },
+    "phone": { "type": "string", "description": "PII — encrypted, Israel or international" },
+    "role": { "type": "string", "description": "Job title" },
+    "industry": { "type": "string" },
+    "company_size": { "type": "string", "enum": ["1-10", "11-50", "51-200", "201+"] },
+    "source": { "type": "string", "enum": ["linkedin", "referral", "event", "website", "cold", "other"] },
+    "source_detail": { "type": "string", "description": "Specific referrer or event" },
+    "source_campaign": {
+      "type": "string",
+      "description": "Campaign that generated this lead",
+      "maxLength": 100
+    },
+    "pipeline_stage": { "type": "string", "enum": ["lead", "qualified", "meeting", "proposal", "negotiation", "won", "lost"], "default": "lead" },
+    "lead_score": { "type": "number", "default": 50, "description": "AI-calculated 0-100" },
+    "potential_value": { "type": "number", "default": 0, "description": "PII — deal value ILS" },
+    "language": { "type": "string", "enum": ["he", "en"], "default": "he" },
+    "notes": { "type": "string" },
+    "last_contact_date": { "type": "string", "description": "Auto-updated on Interaction" },
+    "next_followup_date": { "type": "string" },
+    "lost_reason": { "type": "string", "description": "Required when stage = lost" },
+    "tags": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "required": ["name", "email", "pipeline_stage"]
+}

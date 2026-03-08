@@ -1,0 +1,5 @@
+{
+  "name": "list-github-repos",
+  "entry": "index.ts",
+  "description": "Lists GitHub repositories accessible to the connected user"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "generate-proposal",
+  "entry": "index.ts",
+  "description": "Generates a project proposal document from client and project info"
+}

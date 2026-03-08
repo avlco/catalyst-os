@@ -1,0 +1,16 @@
+{
+  "name": "budget-alert-check",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "daily-budget-alert",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "08:00",
+      "description": "Check business project budgets and alert on 75% and 90% thresholds"
+    }
+  ]
+}

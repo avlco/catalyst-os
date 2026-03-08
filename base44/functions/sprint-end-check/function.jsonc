@@ -1,0 +1,16 @@
+{
+  "name": "sprint-end-check",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "daily-sprint-end-check",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "18:00",
+      "description": "Check for sprints ending today and create notifications"
+    }
+  ]
+}

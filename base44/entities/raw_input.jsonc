@@ -1,0 +1,15 @@
+// E10 — RawInput
+{
+  "name": "RawInput",
+  "type": "object",
+  "properties": {
+    "input_type": { "type": "string", "enum": ["text", "github", "link", "task_completion"] },
+    "body": { "type": "string", "maxLength": 2000, "description": "Raw content" },
+    "source_ref": { "type": "string", "description": "GitHub SHA, Task ID, URL" },
+    "processed": { "type": "boolean", "default": false },
+    "content_ids": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "ai_summary": { "type": "string" },
+    "suggested_platforms": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "required": ["input_type", "body", "processed"]
+}

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "base44-cli": {
+      "source": "base44/skills",
+      "sourceType": "github",
+      "computedHash": "73be3b81cd7960c33c1a0b533c7ececf6a470bd6013c9d47be764f7c1eea9d93"
+    },
+    "base44-sdk": {
+      "source": "base44/skills",
+      "sourceType": "github",
+      "computedHash": "ffd3b9c7db836ef95e19cbaa717a4eff76118a8105fa71da0646abcbaa5d5460"
+    },
+    "base44-troubleshooter": {
+      "source": "base44/skills",
+      "sourceType": "github",
+      "computedHash": "707623fa746d385929a81d9a57fa7923e19e3845fc46dbf87b857da15b8c183c"
+    }
+  }
+}

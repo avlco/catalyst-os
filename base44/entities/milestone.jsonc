@@ -1,0 +1,16 @@
+// E14 — Milestone
+{
+  "name": "Milestone",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string" },
+    "project_type": { "type": "string", "enum": ["personal", "business"] },
+    "title": { "type": "string", "maxLength": 100 },
+    "description": { "type": "string" },
+    "target_date": { "type": "string" },
+    "status": { "type": "string", "enum": ["upcoming", "in_progress", "completed", "missed"], "default": "upcoming" },
+    "success_criteria": { "type": "string" },
+    "task_ids": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "required": ["project_id", "project_type", "title", "target_date", "status"]
+}

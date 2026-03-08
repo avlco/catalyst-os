@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts loaded via index.html: Inter, Assistant, JetBrains Mono */
+
+@layer base {
+  /* Light Mode (default) */
+  :root {
+    --bg-primary: 152 30% 97%;        /* #F8FAF9 */
+    --bg-card: 0 0% 100%;             /* #FFFFFF */
+    --bg-elevated: 150 30% 95%;       /* #F0F7F3 */
+    --border: 153 20% 90%;            /* #E2EBE6 */
+    --text-primary: 150 44% 9%;       /* #0D1F17 */
+    --text-secondary: 150 16% 49%;    /* #6B8F7A */
+    --accent: 145 70% 36%;            /* #16A34A */
+    --accent-hover: 145 72% 29%;      /* #15803D */
+    --accent-foreground: 0 0% 100%;   /* white text on accent */
+    --status-success: 145 70% 36%;    /* #16A34A */
+    --status-warning: 48 88% 40%;     /* #CA8A04 */
+    --status-danger: 0 72% 51%;       /* #DC2626 */
+    --status-info: 217 71% 53%;       /* #2563EB */
+
+    /* shadcn compat */
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+    --card: var(--bg-card);
+    --card-foreground: var(--text-primary);
+    --popover: var(--bg-card);
+    --popover-foreground: var(--text-primary);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --secondary: var(--bg-elevated);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--bg-elevated);
+    --muted-foreground: var(--text-secondary);
+    --destructive: var(--status-danger);
+    --destructive-foreground: 0 0% 100%;
+    --input: var(--border);
+    --ring: var(--accent);
+    --radius: 0.5rem;
+
+    --sidebar-width: 240px;
+    --sidebar-collapsed-width: 64px;
+    --topbar-height: 56px;
+  }
+
+  /* Dark Mode */
+  .dark {
+    --bg-primary: 150 44% 9%;         /* #0D1F17 */
+    --bg-card: 150 30% 15%;           /* #1A3326 */
+    --bg-elevated: 150 30% 18%;       /* #1E3D2C */
+    --border: 150 25% 22%;            /* #2A4A37 */
+    --text-primary: 150 14% 95%;      /* #F0F4F1 */
+    --text-secondary: 150 14% 67%;    /* #9DB8A8 */
+    --accent: 142 69% 58%;            /* #4ADE80 */
+    --accent-hover: 142 71% 45%;      /* #22C55E */
+    --accent-foreground: 150 44% 9%;  /* dark text on accent */
+    --status-success: 142 71% 45%;    /* #22C55E */
+    --status-warning: 48 89% 50%;     /* #EAB308 */
+    --status-danger: 0 84% 60%;       /* #EF4444 */
+    --status-info: 217 72% 60%;       /* #3B82F6 */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'Arial', sans-serif;
+  }
+
+  html[dir="rtl"] body {
+    font-family: 'Assistant', 'Arial', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Typography Scale */
+@layer components {
+  .text-display { @apply text-[32px] font-extrabold leading-tight; }
+  .text-h1 { @apply text-[28px] font-bold leading-tight; }
+  .text-h2 { @apply text-[22px] font-semibold leading-snug; }
+  .text-h3 { @apply text-[18px] font-semibold leading-snug; }
+  .text-body-l { @apply text-[16px] font-normal leading-relaxed; }
+  .text-body-m { @apply text-[14px] font-normal leading-relaxed; }
+  .text-caption { @apply text-[12px] font-normal leading-normal; }
+  .text-code { @apply text-[13px] font-normal font-mono; }
+}
+
+/* Scrollbar styling for dark mode */
+@layer base {
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(var(--bg-primary));
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--text-secondary));
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

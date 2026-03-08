@@ -1,0 +1,15 @@
+// E07 — Interaction
+{
+  "name": "Interaction",
+  "type": "object",
+  "properties": {
+    "client_id": { "type": "string", "description": "Related Client ID" },
+    "type": { "type": "string", "enum": ["call", "meeting", "email", "whatsapp", "linkedin", "other"] },
+    "date": { "type": "string", "description": "DateTime when it occurred" },
+    "summary": { "type": "string", "description": "What was discussed" },
+    "action_items": { "type": "string" },
+    "sentiment": { "type": "string", "enum": ["positive", "neutral", "negative"], "default": "neutral" },
+    "duration_min": { "type": "number" }
+  },
+  "required": ["client_id", "type", "date", "summary"]
+}

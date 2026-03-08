@@ -1,0 +1,19 @@
+// E17 — Document: Proposals, contracts, briefs
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "client_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "type": { "type": "string", "enum": ["proposal", "contract", "brief", "nda", "other"] },
+    "title": { "type": "string", "maxLength": 200 },
+    "status": { "type": "string", "enum": ["draft", "sent", "accepted", "rejected", "expired"], "default": "draft" },
+    "body": { "type": "string" },
+    "external_url": { "type": "string" },
+    "value": { "type": "number", "description": "PII — proposed amount ILS" },
+    "sent_at": { "type": "string" },
+    "expires_at": { "type": "string" },
+    "version": { "type": "number", "default": 1 }
+  },
+  "required": ["client_id", "type", "title", "status", "version"]
+}

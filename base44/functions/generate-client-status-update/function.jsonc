@@ -1,0 +1,4 @@
+{
+  "name": "generate-client-status-update",
+  "entry": "index.ts"
+}

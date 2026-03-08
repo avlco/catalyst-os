@@ -1,0 +1,5 @@
+{
+  "name": "analyze-repo-code",
+  "entry": "index.ts",
+  "description": "Reads a GitHub repo's code via API and runs AI analysis (bugs, security, task progress)"
+}

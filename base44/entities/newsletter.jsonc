@@ -1,0 +1,20 @@
+// E11 — Newsletter
+{
+  "name": "Newsletter",
+  "type": "object",
+  "properties": {
+    "issue_number": { "type": "number" },
+    "week_of": { "type": "string", "description": "Date (Monday) this covers" },
+    "status": { "type": "string", "enum": ["draft", "ready", "sent"], "default": "draft" },
+    "subject_en": { "type": "string", "maxLength": 100 },
+    "subject_he": { "type": "string", "maxLength": 100 },
+    "body_en": { "type": "string", "description": "English HTML body" },
+    "body_he": { "type": "string", "description": "Hebrew HTML body" },
+    "ai_news_items": { "type": "array", "items": { "type": "object" }, "default": [] },
+    "blog_content_id": { "type": "string" },
+    "recipients_count": { "type": "number", "default": 0 },
+    "open_rate": { "type": "number", "default": 0 },
+    "sent_at": { "type": "string" }
+  },
+  "required": ["issue_number", "week_of", "status"]
+}

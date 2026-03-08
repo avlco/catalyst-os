@@ -1,0 +1,16 @@
+{
+  "name": "check-stale-leads",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "daily-stale-leads-check",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "09:00",
+      "description": "Check for leads with no interaction in 3+ days"
+    }
+  ]
+}

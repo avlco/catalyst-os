@@ -1,0 +1,26 @@
+// E04 — Task: Universal task entity for PersonalProjects and BusinessProjects
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "maxLength": 200, "description": "Task title" },
+    "description": { "type": "string", "description": "Full description, acceptance criteria" },
+    "parent_type": { "type": "string", "enum": ["personal", "business"], "description": "Which project type" },
+    "parent_id": { "type": "string", "description": "ID of PersonalProject or BusinessProject" },
+    "system_id": { "type": "string", "description": "Specific sub-system (personal projects)" },
+    "status": { "type": "string", "enum": ["todo", "in_progress", "blocked", "done", "cancelled"], "default": "todo" },
+    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"], "default": "medium" },
+    "epic": { "type": "string", "description": "Epic / theme label" },
+    "story_points": { "type": "number", "description": "Fibonacci: 1,2,3,5,8,13" },
+    "actual_hours": { "type": "number", "default": 0 },
+    "due_date": { "type": "string", "description": "Date format YYYY-MM-DD" },
+    "sprint_id": { "type": "string", "description": "Assigned sprint" },
+    "milestone_id": { "type": "string", "description": "Assigned milestone" },
+    "github_issue_url": { "type": "string", "description": "Linked GitHub issue" },
+    "blocked_reason": { "type": "string", "description": "Required when status = blocked" },
+    "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "assigned_to": { "type": "string", "description": "Assigned user or team member" },
+    "content_trigger": { "type": "boolean", "default": false, "description": "Completion auto-creates RawInput" }
+  },
+  "required": ["title", "parent_type", "parent_id", "status", "priority", "content_trigger"]
+}

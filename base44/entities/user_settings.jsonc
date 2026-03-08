@@ -1,0 +1,95 @@
+// E01 — UserSettings: Single record per user. Created on first login.
+{
+  "name": "UserSettings",
+  "type": "object",
+  "properties": {
+    "language": {
+      "type": "string",
+      "enum": ["en", "he"],
+      "default": "en",
+      "description": "UI language"
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["light", "dark"],
+      "default": "dark",
+      "description": "Persisted theme preference"
+    },
+    "github_connected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether GitHub token has been verified"
+    },
+    "github_username": {
+      "type": "string",
+      "description": "GitHub login username"
+    },
+    "github_avatar_url": {
+      "type": "string",
+      "description": "GitHub profile avatar URL"
+    },
+    "github_name": {
+      "type": "string",
+      "description": "GitHub display name"
+    },
+    "linkedin_profile_url": {
+      "type": "string",
+      "description": "Personal LinkedIn URL"
+    },
+    "linkedin_business_url": {
+      "type": "string",
+      "description": "CatalystAI LinkedIn page URL"
+    },
+    "facebook_profile_url": {
+      "type": "string",
+      "description": "Personal Facebook URL"
+    },
+    "facebook_business_url": {
+      "type": "string",
+      "description": "CatalystAI Facebook page URL"
+    },
+    "default_content_lang": {
+      "type": "string",
+      "enum": ["en", "he", "both"],
+      "default": "both",
+      "description": "Default AI output language"
+    },
+    "working_hours_start": {
+      "type": "string",
+      "default": "09:00",
+      "description": "Scheduling suggestions"
+    },
+    "working_hours_end": {
+      "type": "string",
+      "default": "18:00",
+      "description": "Scheduling suggestions"
+    },
+    "notify_stale_leads_days": {
+      "type": "number",
+      "default": 3,
+      "description": "Days before stale lead alert"
+    },
+    "github_sync_interval_hours": {
+      "type": "number",
+      "default": 6,
+      "description": "How often to auto-sync GitHub"
+    },
+    "newsletter_send_day": {
+      "type": "string",
+      "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "default": "friday",
+      "description": "Newsletter assembly trigger day"
+    },
+    "ai_cost_alert_threshold_usd": {
+      "type": "number",
+      "default": 20,
+      "description": "Monthly AI cost alert threshold"
+    },
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has completed the onboarding flow"
+    }
+  },
+  "required": ["language", "theme", "default_content_lang", "notify_stale_leads_days", "github_sync_interval_hours", "newsletter_send_day", "ai_cost_alert_threshold_usd"]
+}

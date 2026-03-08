@@ -1,0 +1,14 @@
+// E19 — Translation: AI translation cache to avoid re-translating the same text
+{
+  "name": "Translation",
+  "type": "object",
+  "properties": {
+    "entity_type": { "type": "string", "description": "Source entity type (e.g. Task, Notification)" },
+    "entity_id": { "type": "string", "description": "Source entity ID" },
+    "field": { "type": "string", "description": "Field name that was translated (e.g. title, body)" },
+    "target_language": { "type": "string", "enum": ["en", "he"], "description": "Language this was translated TO" },
+    "translated_text": { "type": "string" },
+    "source_hash": { "type": "string", "description": "Hash of original text for cache invalidation" }
+  },
+  "required": ["entity_type", "entity_id", "field", "target_language", "translated_text", "source_hash"]
+}

@@ -1,0 +1,18 @@
+// E18 — AICallLog: Cost tracking, debugging, audit
+{
+  "name": "AICallLog",
+  "type": "object",
+  "properties": {
+    "function_name": { "type": "string" },
+    "model": { "type": "string" },
+    "input_tokens": { "type": "number" },
+    "output_tokens": { "type": "number" },
+    "duration_ms": { "type": "number" },
+    "success": { "type": "boolean" },
+    "error_message": { "type": "string" },
+    "source_entity_id": { "type": "string" },
+    "source_entity_type": { "type": "string" },
+    "cost_usd": { "type": "number" }
+  },
+  "required": ["function_name", "model", "input_tokens", "output_tokens", "duration_ms", "success"]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "token-rotation-reminder",
+  "description": "Remind to rotate GitHub token every 80 days",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "token-rotation-check",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "09:00"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "calculate-lead-score",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "On Interaction Created",
+      "type": "entity",
+      "entity_name": "Interaction",
+      "event_types": ["create"],
+      "description": "Recalculate lead score when a new interaction is logged"
+    }
+  ]
+}

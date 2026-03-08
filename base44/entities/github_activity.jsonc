@@ -1,0 +1,18 @@
+// E12 — GitHubActivity
+{
+  "name": "GitHubActivity",
+  "type": "object",
+  "properties": {
+    "system_id": { "type": "string", "description": "Which ProjectSystem" },
+    "type": { "type": "string", "enum": ["commit", "pr_merged", "issue_closed", "release"] },
+    "sha": { "type": "string" },
+    "message": { "type": "string", "maxLength": 500 },
+    "author": { "type": "string" },
+    "github_url": { "type": "string" },
+    "occurred_at": { "type": "string" },
+    "ai_summary": { "type": "string" },
+    "content_worthy": { "type": "boolean", "default": false },
+    "raw_input_id": { "type": "string" }
+  },
+  "required": ["system_id", "type", "message", "occurred_at"]
+}

@@ -1,0 +1,16 @@
+// E15 — Subscriber: PII Entity — email encrypted
+{
+  "name": "Subscriber",
+  "type": "object",
+  "properties": {
+    "email": { "type": "string", "description": "PII — encrypted" },
+    "name": { "type": "string" },
+    "language": { "type": "string", "enum": ["en", "he", "both"], "default": "both" },
+    "status": { "type": "string", "enum": ["active", "unsubscribed", "bounced"], "default": "active" },
+    "subscribed_at": { "type": "string", "description": "Consent timestamp" },
+    "source": { "type": "string", "enum": ["manual", "website", "event", "import"] },
+    "unsubscribed_at": { "type": "string" },
+    "bounce_count": { "type": "number", "default": 0 }
+  },
+  "required": ["email", "language", "status", "subscribed_at", "source"]
+}

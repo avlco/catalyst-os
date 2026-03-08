@@ -1,0 +1,18 @@
+// E05 — Sprint
+{
+  "name": "Sprint",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "Parent project ID" },
+    "project_type": { "type": "string", "enum": ["personal", "business"] },
+    "name": { "type": "string", "maxLength": 100 },
+    "goal": { "type": "string", "description": "Sprint goal statement" },
+    "start_date": { "type": "string", "description": "Date YYYY-MM-DD" },
+    "end_date": { "type": "string", "description": "Date YYYY-MM-DD, must be > start_date" },
+    "status": { "type": "string", "enum": ["planned", "active", "completed"], "default": "planned" },
+    "velocity_planned": { "type": "number", "default": 0 },
+    "velocity_actual": { "type": "number", "default": 0 },
+    "retro_notes": { "type": "string", "description": "Retrospective notes" }
+  },
+  "required": ["project_id", "project_type", "name", "start_date", "end_date", "status"]
+}

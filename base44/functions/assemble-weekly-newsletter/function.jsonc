@@ -1,0 +1,17 @@
+{
+  "name": "assemble-weekly-newsletter",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "Friday Newsletter Assembly",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "weeks",
+      "repeat_interval": 1,
+      "repeat_on_days": [5],
+      "start_time": "08:00",
+      "description": "Assemble weekly newsletter every Friday at 08:00"
+    }
+  ]
+}

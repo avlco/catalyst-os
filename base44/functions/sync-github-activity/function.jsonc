@@ -1,0 +1,15 @@
+{
+  "name": "sync-github-activity",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "GitHub Sync Every 6 Hours",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "hours",
+      "repeat_interval": 6,
+      "description": "Sync GitHub activity every 6 hours"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "generate-daily-briefing",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "Daily Briefing 07:30",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "07:30",
+      "description": "Generate daily briefing at 07:30"
+    }
+  ]
+}

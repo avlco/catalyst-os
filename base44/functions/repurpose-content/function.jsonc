@@ -1,0 +1,5 @@
+{
+  "name": "repurpose-content",
+  "entry": "index.ts",
+  "description": "Takes a published blog post and generates platform-specific variants (LinkedIn, Twitter)"
+}

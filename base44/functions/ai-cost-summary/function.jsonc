@@ -1,0 +1,17 @@
+{
+  "name": "ai-cost-summary",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "weekly-ai-cost-summary",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "weeks",
+      "repeat_interval": 1,
+      "start_time": "09:00",
+      "repeat_on_days": [1],
+      "description": "Weekly AI cost summary notification every Monday"
+    }
+  ]
+}

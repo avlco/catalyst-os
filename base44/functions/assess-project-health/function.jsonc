@@ -1,0 +1,16 @@
+{
+  "name": "assess-project-health",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "Daily Health Check 08:00",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "days",
+      "repeat_interval": 1,
+      "start_time": "08:00",
+      "description": "Assess all project health at 08:00 daily"
+    }
+  ]
+}

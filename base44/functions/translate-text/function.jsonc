@@ -1,0 +1,5 @@
+{
+  "name": "translate-text",
+  "entry": "index.ts",
+  "description": "Translates text between English and Hebrew with caching via Translation entity"
+}

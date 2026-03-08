@@ -1,0 +1,15 @@
+// E16 — ContentTemplate
+{
+  "name": "ContentTemplate",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "maxLength": 60 },
+    "type": { "type": "string", "enum": ["post", "blog", "newsletter"] },
+    "platform": { "type": "string", "enum": ["linkedin_personal", "linkedin_business", "facebook_personal", "facebook_business", "blog", "newsletter"] },
+    "language": { "type": "string", "enum": ["en", "he"] },
+    "body_template": { "type": "string", "description": "With {{variable}} placeholders" },
+    "is_default": { "type": "boolean", "default": false },
+    "description": { "type": "string" }
+  },
+  "required": ["name", "type", "language", "body_template", "is_default"]
+}
