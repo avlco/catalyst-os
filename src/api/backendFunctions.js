@@ -17,4 +17,10 @@ export const backendFunctions = {
   verifyGitHubConnection: (data) => invoke('verify-github-connection', data || {}),
   listGitHubRepos: (data) => invoke('list-github-repos', data || {}),
   translateText: (data) => invoke('translate-text', data),
+  assistBrandVoice: (data) => invoke('assist-brand-voice', data),
+  publishBlogToWebsite: (data) => invoke('publish-blog-to-website', data),
+  sendNewsletter: (data) => invoke('send-newsletter', data),
+  detectContentSignals: (data) => invoke('detect-content-signals', data || {}),
+  scanExternalTrends: (data) => invoke('scan-external-trends', data || {}),
+  strategicBrain: (data) => invoke('strategic-brain', data || {}),
 };
