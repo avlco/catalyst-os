@@ -32,18 +32,18 @@ export default function EpicCard({ epic, epicIndex, onChange, isReadOnly, t }) {
         {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
         <Layers className="w-4 h-4 text-primary" />
         {isReadOnly ? (
-          <span className="text-sm font-medium text-foreground flex-1 text-start">{epic.name || 'Unnamed Epic'}</span>
+          <span className="text-sm font-medium text-foreground flex-1 text-start">{epic.name || (t?.('discovery.workPlan.epicUnnamed') || 'Unnamed Epic')}</span>
         ) : (
           <input
             value={epic.name || ''}
             onChange={(e) => onChange(epicIndex, { ...epic, name: e.target.value })}
             onClick={(e) => e.stopPropagation()}
-            placeholder="Epic name"
+            placeholder={t?.('discovery.workPlan.epicName') || 'Epic name'}
             className="flex-1 text-sm font-medium text-foreground bg-transparent focus:outline-none text-start"
           />
         )}
         <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
-          <span>{tasks.length} tasks</span>
+          <span>{tasks.length} {t?.('discovery.workPlan.tasks') || 'tasks'}</span>
           <span>{totalPoints} pts</span>
           {mvpCount > 0 && <span className="text-primary">{mvpCount} MVP</span>}
         </div>
@@ -71,7 +71,7 @@ export default function EpicCard({ epic, epicIndex, onChange, isReadOnly, t }) {
                       <input
                         value={task.title || ''}
                         onChange={(e) => updateTask(ti, 'title', e.target.value)}
-                        placeholder="Task title"
+                        placeholder={t?.('discovery.workPlan.taskTitle') || 'Task title'}
                         className="w-full bg-transparent text-sm focus:outline-none"
                       />
                     )}
@@ -88,9 +88,9 @@ export default function EpicCard({ epic, epicIndex, onChange, isReadOnly, t }) {
                         onChange={(e) => updateTask(ti, 'priority', e.target.value)}
                         className="text-xs bg-transparent border border-border rounded px-1 py-0.5 focus:outline-none"
                       >
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
+                        <option value="high">{t?.('common.priorityLabels.high') || 'High'}</option>
+                        <option value="medium">{t?.('common.priorityLabels.medium') || 'Medium'}</option>
+                        <option value="low">{t?.('common.priorityLabels.low') || 'Low'}</option>
                       </select>
                     )}
                   </td>

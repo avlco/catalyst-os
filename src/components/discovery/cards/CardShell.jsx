@@ -14,6 +14,7 @@ export default function CardShell({
   collapsible = false,
   defaultCollapsed = false,
   span = 1,
+  t,
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [showMenu, setShowMenu] = useState(false);
@@ -31,7 +32,7 @@ export default function CardShell({
           {Icon && <Icon className="w-4 h-4 text-muted-foreground shrink-0" />}
           <span className="text-sm font-medium text-foreground truncate">{title}</span>
           {isEdited && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Edited</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t?.('discovery.cards.edited') || 'Edited'}</span>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -39,7 +40,7 @@ export default function CardShell({
             <button
               onClick={onRefine}
               className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Refine via chat"
+              title={t?.('discovery.cards.refineViaChat') || 'Refine via chat'}
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -67,7 +68,7 @@ export default function CardShell({
                     className="w-full px-3 py-1.5 text-start text-sm hover:bg-muted flex items-center gap-2"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    Reset to AI draft
+                    {t?.('discovery.cards.resetToAiDraft') || 'Reset to AI draft'}
                   </button>
                 </div>
               )}

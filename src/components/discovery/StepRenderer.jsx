@@ -104,6 +104,7 @@ export default function StepRenderer({
             onReset={() => onResetSection?.(sectionConfig.key)}
             isReadOnly={isReadOnly}
             span={span}
+            t={t}
             {...cardProps}
           />
         );

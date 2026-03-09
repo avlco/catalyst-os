@@ -31,19 +31,19 @@ function parseDecision(content) {
   return { options, recommendation };
 }
 
-export default function DecisionCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function DecisionCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const { options, recommendation } = parseDecision(content);
 
   if (options.length === 0) {
     return (
-      <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+      <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
         <div className="text-sm text-muted-foreground whitespace-pre-wrap">{content || '—'}</div>
       </CardShell>
     );
   }
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <div className="space-y-3">
         {options.map((opt, idx) => {
           const isRecommended = recommendation?.toLowerCase().includes(opt.name.toLowerCase());
@@ -78,7 +78,7 @@ export default function DecisionCard({ title, icon, content, onChange, onRefine,
       </div>
       {recommendation && (
         <div className="mt-3 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
-          <span className="text-xs font-medium text-primary">Recommended: </span>
+          <span className="text-xs font-medium text-primary">{t?.('discovery.cards.recommended') || 'Recommended'}: </span>
           <span className="text-xs text-foreground">{recommendation}</span>
         </div>
       )}

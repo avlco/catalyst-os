@@ -27,11 +27,11 @@ function parseIntegrations(content) {
   });
 }
 
-export default function IntegrationCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function IntegrationCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const integrations = parseIntegrations(content);
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <div className="space-y-2">
         {integrations.map((intg, idx) => {
           const isCritical = (intg.critical || '').toLowerCase() === 'yes' || (intg.critical || '').toLowerCase() === 'true';
@@ -48,7 +48,7 @@ export default function IntegrationCard({ title, icon, content, onChange, onRefi
                   <span className="text-sm font-medium text-foreground">{intg.name}</span>
                   {isCritical && (
                     <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="w-2.5 h-2.5" /> Critical
+                      <AlertTriangle className="w-2.5 h-2.5" /> {t?.('discovery.cards.critical') || 'Critical'}
                     </span>
                   )}
                 </div>
@@ -59,7 +59,7 @@ export default function IntegrationCard({ title, icon, content, onChange, onRefi
           );
         })}
         {integrations.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">No integrations defined yet</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t?.('discovery.cards.noIntegrations') || 'No integrations defined yet'}</p>
         )}
       </div>
     </CardShell>

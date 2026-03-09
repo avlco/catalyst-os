@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useId } from 'react';
 import { Maximize2, ZoomIn, ZoomOut, X } from 'lucide-react';
 import CardShell from './CardShell';
 
-export default function DiagramCard({ title, icon, content, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function DiagramCard({ title, icon, content, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const containerRef = useRef(null);
   const [svg, setSvg] = useState('');
   const [error, setError] = useState(null);
@@ -51,20 +51,20 @@ export default function DiagramCard({ title, icon, content, onRefine, onReset, i
     >
       {error ? (
         <div className="text-xs text-red-500 p-4 bg-red-500/10 rounded-lg">
-          <p className="font-medium mb-1">Diagram render error</p>
+          <p className="font-medium mb-1">{t?.('discovery.cards.diagramError') || 'Diagram render error'}</p>
           <pre className="whitespace-pre-wrap text-[11px]">{content}</pre>
         </div>
       ) : svg ? (
         <div dangerouslySetInnerHTML={{ __html: svg }} className="[&_svg]:max-w-full" />
       ) : (
-        <div className="text-sm text-muted-foreground p-8">Loading diagram...</div>
+        <div className="text-sm text-muted-foreground p-8">{t?.('discovery.cards.diagramLoading') || 'Loading diagram...'}</div>
       )}
     </div>
   );
 
   return (
     <>
-      <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+      <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
         <div className="flex items-center gap-1 mb-2 justify-end">
           <button onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} className="p-1 rounded hover:bg-muted text-muted-foreground">
             <ZoomOut className="w-3.5 h-3.5" />

@@ -30,8 +30,8 @@ export default function SynthesisView({
           <h3 className="text-sm font-medium text-foreground">{docTitle}</h3>
           <p className="text-xs text-muted-foreground">
             {allApproved
-              ? (t?.('discovery.statusApproved') || 'All sections approved')
-              : (t?.('discovery.synthesis.allSectionsRequired') || 'Review and approve each section')}
+              ? (t?.('discovery.cards.allSectionsApproved') || 'All sections approved')
+              : (t?.('discovery.cards.reviewSections') || 'Review and approve each section')}
           </p>
         </div>
       </div>

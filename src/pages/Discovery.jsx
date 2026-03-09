@@ -442,7 +442,7 @@ export default function Discovery() {
       toast.success(t('discovery.completed'));
       navigate(isPersonal ? `/projects/${projectId}` : `/business/${projectId}`);
     } catch (err) {
-      toast.error(err.message || 'Finalization failed');
+      toast.error(err.message || t('discovery.finalizeFailed'));
     } finally {
       setIsGenerating(false);
     }
@@ -452,15 +452,16 @@ export default function Discovery() {
   // Refine section shortcut (per-card)
   // -------------------------------------------------------------------------
   const onRefineSection = useCallback((sectionKey, sectionTitle) => {
-    setChatPrefill(`Revise the ${sectionTitle} section: `);
+    const prefill = t('discovery.chatRefineSection', { section: sectionTitle }) || `Revise the ${sectionTitle} section: `;
+    setChatPrefill(prefill);
     setIsChatOpen(true);
-  }, []);
+  }, [t]);
 
   // -------------------------------------------------------------------------
   // Reset section to AI draft
   // -------------------------------------------------------------------------
   const onResetSection = useCallback((sectionKey) => {
-    toast.info('Section reset to AI draft');
+    toast.info(t('discovery.sectionReset'));
   }, []);
 
   // -------------------------------------------------------------------------

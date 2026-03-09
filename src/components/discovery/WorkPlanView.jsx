@@ -24,9 +24,9 @@ export default function WorkPlanView({ epics, onChange, isReadOnly, t }) {
           <span className="text-sm font-medium text-foreground">{t?.('discovery.workPlan.title') || 'Work Plan'}</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span>{epics.length} epics</span>
-          <span>{totalTasks} tasks</span>
-          <span>{totalPoints} story points</span>
+          <span>{epics.length} {t?.('discovery.workPlan.epics') || 'epics'}</span>
+          <span>{totalTasks} {t?.('discovery.workPlan.tasks') || 'tasks'}</span>
+          <span>{totalPoints} {t?.('discovery.workPlan.points') || 'story points'}</span>
           {mvpCount > 0 && <span className="text-primary">{mvpCount} MVP</span>}
         </div>
       </div>

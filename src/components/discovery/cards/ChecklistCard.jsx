@@ -16,7 +16,7 @@ function serializeChecklist(items) {
   return items.map(i => `- [${i.checked ? 'x' : ' '}] ${i.text}`).join('\n');
 }
 
-export default function ChecklistCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, accent }) {
+export default function ChecklistCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, accent, t }) {
   const [editingIdx, setEditingIdx] = useState(-1);
   const items = parseChecklist(content);
 
@@ -34,7 +34,7 @@ export default function ChecklistCard({ title, icon, content, onChange, onRefine
   };
 
   const addItem = () => {
-    onChange(serializeChecklist([...items, { text: 'New item', checked: false }]));
+    onChange(serializeChecklist([...items, { text: t?.('discovery.cards.newItem') || 'New item', checked: false }]));
     setEditingIdx(items.length);
   };
 
@@ -45,7 +45,7 @@ export default function ChecklistCard({ title, icon, content, onChange, onRefine
   const accentBorder = accent === 'green' ? 'border-s-2 border-s-green-500' : accent === 'red' ? 'border-s-2 border-s-red-500' : '';
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} className={accentBorder}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} className={accentBorder} t={t}>
       <ul className="space-y-1.5">
         {items.map((item, idx) => (
           <li key={idx} className="flex items-start gap-2 group">
@@ -90,7 +90,7 @@ export default function ChecklistCard({ title, icon, content, onChange, onRefine
       </ul>
       {!isReadOnly && (
         <button onClick={addItem} className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-          <Plus className="w-3 h-3" /> Add item
+          <Plus className="w-3 h-3" /> {t?.('discovery.cards.addItem') || 'Add item'}
         </button>
       )}
     </CardShell>

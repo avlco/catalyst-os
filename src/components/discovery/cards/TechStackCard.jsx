@@ -34,7 +34,7 @@ function getIcon(name) {
   return Code2;
 }
 
-export default function TechStackCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function TechStackCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const items = parseTechStack(content);
@@ -49,7 +49,7 @@ export default function TechStackCard({ title, icon, content, onChange, onRefine
   };
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <div className="flex flex-wrap gap-2">
         {items.map((item, idx) => {
           const TechIcon = getIcon(item.name);
@@ -68,7 +68,7 @@ export default function TechStackCard({ title, icon, content, onChange, onRefine
         {!isReadOnly && !adding && (
           <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors">
             <Plus className="w-4 h-4" />
-            <span className="text-sm">Add</span>
+            <span className="text-sm">{t?.('discovery.cards.add') || 'Add'}</span>
           </button>
         )}
         {adding && (
@@ -78,7 +78,7 @@ export default function TechStackCard({ title, icon, content, onChange, onRefine
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') add(); if (e.key === 'Escape') setAdding(false); }}
-              placeholder="Technology name"
+              placeholder={t?.('discovery.cards.techNamePlaceholder') || 'Technology name'}
               className="px-2 py-1.5 text-sm bg-transparent border border-primary/30 rounded-lg focus:outline-none"
             />
             <button onClick={add} className="p-1.5 rounded-lg bg-primary text-primary-foreground">

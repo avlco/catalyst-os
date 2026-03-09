@@ -25,7 +25,7 @@ function serializeTable(headers, rows) {
   return [h, sep, r].filter(Boolean).join('\n');
 }
 
-export default function TableCard({ title, icon, content, columns, onChange, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function TableCard({ title, icon, content, columns, onChange, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const [editingCell, setEditingCell] = useState(null);
   const { headers, rows } = parseMarkdownTable(content, columns);
 
@@ -45,7 +45,7 @@ export default function TableCard({ title, icon, content, columns, onChange, onR
   };
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <div className="overflow-x-auto -mx-4 px-4">
         <table className="w-full text-sm">
           <thead>
@@ -103,7 +103,7 @@ export default function TableCard({ title, icon, content, columns, onChange, onR
       </div>
       {!isReadOnly && (
         <button onClick={addRow} className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-          <Plus className="w-3 h-3" /> Add row
+          <Plus className="w-3 h-3" /> {t?.('discovery.cards.addRow') || 'Add row'}
         </button>
       )}
     </CardShell>

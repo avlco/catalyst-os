@@ -17,7 +17,7 @@ function serializeMetrics(metrics) {
   return metrics.map(m => `- ${m.label}: ${m.value}`).join('\n');
 }
 
-export default function MetricCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span }) {
+export default function MetricCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, t }) {
   const [editingIdx, setEditingIdx] = useState(-1);
   const metrics = parseMetrics(content);
 
@@ -28,7 +28,7 @@ export default function MetricCard({ title, icon, content, onChange, onRefine, o
   };
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <div className="space-y-3">
         {metrics.map((m, idx) => (
           <div key={idx} className="flex flex-col gap-0.5">

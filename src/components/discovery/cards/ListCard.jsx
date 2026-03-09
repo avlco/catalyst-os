@@ -11,7 +11,7 @@ function serializeList(items) {
   return items.map(item => `- ${item}`).join('\n');
 }
 
-export default function ListCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, colorCode }) {
+export default function ListCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, colorCode, t }) {
   const [editingIdx, setEditingIdx] = useState(-1);
   const items = parseList(content);
 
@@ -22,7 +22,7 @@ export default function ListCard({ title, icon, content, onChange, onRefine, onR
   };
 
   const addItem = () => {
-    onChange(serializeList([...items, 'New item']));
+    onChange(serializeList([...items, t?.('discovery.cards.newItem') || 'New item']));
     setEditingIdx(items.length);
   };
 
@@ -41,7 +41,7 @@ export default function ListCard({ title, icon, content, onChange, onRefine, onR
   };
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       <ul className="space-y-1.5">
         {items.map((item, idx) => (
           <li key={idx} className={`flex items-start gap-2 group ${getItemColor(item)}`}>
@@ -75,7 +75,7 @@ export default function ListCard({ title, icon, content, onChange, onRefine, onR
       </ul>
       {!isReadOnly && (
         <button onClick={addItem} className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-          <Plus className="w-3 h-3" /> Add item
+          <Plus className="w-3 h-3" /> {t?.('discovery.cards.addItem') || 'Add item'}
         </button>
       )}
     </CardShell>

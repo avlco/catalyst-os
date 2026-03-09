@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import CardShell from './CardShell';
 
-export default function TextCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, prominent }) {
+export default function TextCard({ title, icon, content, onChange, onRefine, onReset, isReadOnly, isEdited, span, prominent, t }) {
   const [editing, setEditing] = useState(false);
   const textareaRef = useRef(null);
 
@@ -14,7 +14,7 @@ export default function TextCard({ title, icon, content, onChange, onRefine, onR
   }, [editing]);
 
   return (
-    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span}>
+    <CardShell title={title} icon={icon} onRefine={onRefine} onReset={onReset} isReadOnly={isReadOnly} isEdited={isEdited} span={span} t={t}>
       {editing && !isReadOnly ? (
         <textarea
           ref={textareaRef}
@@ -32,7 +32,7 @@ export default function TextCard({ title, icon, content, onChange, onRefine, onR
           onClick={() => !isReadOnly && setEditing(true)}
           className={`text-sm leading-relaxed whitespace-pre-wrap ${isReadOnly ? 'cursor-default' : 'cursor-text hover:bg-muted/30 rounded-lg -m-2 p-2 transition-colors'} ${prominent ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
         >
-          {content || (isReadOnly ? '—' : 'Click to edit...')}
+          {content || (isReadOnly ? '—' : (t?.('discovery.cards.clickToEdit') || 'Click to edit...'))}
         </div>
       )}
     </CardShell>
