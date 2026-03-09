@@ -12,11 +12,11 @@ export const PERSONAL_STEPS = [
     icon: "Lightbulb",
     canGoNoGo: true,
     sections: [
-      { key: "concept_statement", type: "text" },
-      { key: "key_angles", type: "list" },
-      { key: "risks", type: "list" },
-      { key: "open_questions", type: "list" },
-      { key: "go_no_go", type: "text" },
+      { key: "concept_statement", type: "text", cardType: "TextCard", cardProps: { prominent: true } },
+      { key: "key_angles", type: "list", cardType: "ListCard" },
+      { key: "risks", type: "list", cardType: "ListCard", cardProps: { colorCode: true } },
+      { key: "open_questions", type: "list", cardType: "ChecklistCard" },
+      { key: "go_no_go", type: "text", cardType: "DecisionCard" },
     ],
     prompt: `You are a Product Strategist and Devil's Advocate.
 Your goal: Help the founder explore, challenge, and sharpen their idea.
@@ -35,11 +35,11 @@ Based on the context provided, produce a structured document with these sections
     roleHe: "אנליסט מחקר שוק",
     icon: "Search",
     sections: [
-      { key: "problem_validation", type: "text" },
-      { key: "competitors", type: "list" },
-      { key: "market_size", type: "text" },
-      { key: "timing", type: "text" },
-      { key: "gaps", type: "list" },
+      { key: "problem_validation", type: "text", cardType: "TextCard" },
+      { key: "competitors", type: "list", cardType: "ListCard" },
+      { key: "market_size", type: "text", cardType: "TextCard" },
+      { key: "timing", type: "text", cardType: "TextCard" },
+      { key: "gaps", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Market Research Analyst.
 Your goal: Assess whether the market need is real, sized, and timely.
@@ -58,10 +58,10 @@ Based on the concept from previous steps, produce:
     roleHe: "אנליסט עסקי",
     icon: "DollarSign",
     sections: [
-      { key: "revenue_model", type: "text" },
-      { key: "pricing_hypothesis", type: "text" },
-      { key: "unit_economics", type: "text" },
-      { key: "break_even", type: "text" },
+      { key: "revenue_model", type: "text", cardType: "TextCard" },
+      { key: "pricing_hypothesis", type: "text", cardType: "MetricCard" },
+      { key: "unit_economics", type: "text", cardType: "MetricCard" },
+      { key: "break_even", type: "text", cardType: "TextCard" },
     ],
     prompt: `You are a Business Analyst and CFO advisor.
 Your goal: Assess economic viability — revenue model, unit economics, break-even.
@@ -79,10 +79,10 @@ Be realistic, not optimistic. Based on the concept and market data, produce:
     roleHe: "מנהל מוצר",
     icon: "Target",
     sections: [
-      { key: "vision_statement", type: "text" },
-      { key: "target_audience", type: "text" },
-      { key: "kpis", type: "table", columns: ["metric", "target", "timeframe"] },
-      { key: "success_definition", type: "text" },
+      { key: "vision_statement", type: "text", cardType: "TextCard", cardProps: { prominent: true } },
+      { key: "target_audience", type: "text", cardType: "ListCard" },
+      { key: "kpis", type: "table", columns: ["metric", "target", "timeframe"], cardType: "TableCard" },
+      { key: "success_definition", type: "text", cardType: "TextCard" },
     ],
     prompt: `You are a Product Manager.
 Your goal: Define a clear Vision, measurable KPIs, and target audience.
@@ -100,12 +100,12 @@ Push for specificity — no vague statements. Based on all previous steps, produ
     roleHe: "בעל מוצר",
     icon: "Settings",
     sections: [
-      { key: "must_have", type: "list" },
-      { key: "should_have", type: "list" },
-      { key: "could_have", type: "list" },
-      { key: "out_of_scope", type: "list" },
-      { key: "core_loop", type: "text" },
-      { key: "mvp_definition", type: "text" },
+      { key: "must_have", type: "list", cardType: "ChecklistCard", cardProps: { accent: "green" } },
+      { key: "should_have", type: "list", cardType: "ChecklistCard" },
+      { key: "could_have", type: "list", cardType: "ChecklistCard" },
+      { key: "out_of_scope", type: "list", cardType: "ChecklistCard", cardProps: { accent: "red" } },
+      { key: "core_loop", type: "text", cardType: "TextCard" },
+      { key: "mvp_definition", type: "text", cardType: "TextCard" },
     ],
     prompt: `You are a Product Owner.
 Your goal: Define scope clearly. Protect against scope creep.
@@ -125,11 +125,11 @@ Actively challenge features — push back on anything that's not core. Produce:
     roleHe: "ארכיטקט פתרונות",
     icon: "Server",
     sections: [
-      { key: "tech_stack", type: "text" },
-      { key: "auth_strategy", type: "text" },
-      { key: "hosting", type: "text" },
-      { key: "nfrs", type: "table", columns: ["requirement", "target", "notes"] },
-      { key: "security", type: "list" },
+      { key: "tech_stack", type: "text", cardType: "TechStackCard" },
+      { key: "auth_strategy", type: "text", cardType: "TextCard" },
+      { key: "hosting", type: "text", cardType: "TextCard" },
+      { key: "nfrs", type: "table", columns: ["requirement", "target", "notes"], cardType: "TableCard" },
+      { key: "security", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Solutions Architect.
 Default stack context: React + Vite + TailwindCSS + Base44 BaaS (Deno functions).
@@ -138,7 +138,13 @@ Your goal: Make the right technical infrastructure decisions. Explain trade-offs
 - auth_strategy: Authentication and authorization approach
 - hosting: Hosting and deployment strategy
 - nfrs: Non-functional requirements table (performance, scalability, availability targets)
-- security: Security requirements and considerations (bullet list)`,
+- security: Security requirements and considerations (bullet list)
+
+Include a Mermaid architecture diagram showing system components and their connections. Use this format:
+\`\`\`mermaid
+graph TD
+  A[Component] --> B[Component]
+\`\`\``,
   },
   {
     id: 7,
@@ -148,10 +154,10 @@ Your goal: Make the right technical infrastructure decisions. Explain trade-offs
     roleHe: "ארכיטקט מערכת + מעצב UX",
     icon: "Database",
     sections: [
-      { key: "entities", type: "table", columns: ["name", "key_fields", "relations"] },
-      { key: "screens", type: "list" },
-      { key: "user_flows", type: "list" },
-      { key: "erd_summary", type: "text" },
+      { key: "entities", type: "table", columns: ["name", "key_fields", "relations"], cardType: "TableCard" },
+      { key: "screens", type: "list", cardType: "ListCard" },
+      { key: "user_flows", type: "list", cardType: "DiagramCard" },
+      { key: "erd_summary", type: "text", cardType: "DiagramCard" },
     ],
     prompt: `You are a System Architect and UX Designer.
 Your goal: Define the data model, screens, and key user flows.
@@ -159,7 +165,19 @@ Derive entities from the features defined in previous steps. Produce:
 - entities: Table of entities with name, key fields, and relationships
 - screens: List of screens/pages the app needs (bullet list with brief description)
 - user_flows: Key user journeys as step-by-step flows (bullet list)
-- erd_summary: Brief text summary of how entities relate`,
+- erd_summary: Brief text summary of how entities relate
+
+Include a Mermaid ER diagram showing entity relationships:
+\`\`\`mermaid
+erDiagram
+  ENTITY1 ||--o{ ENTITY2 : has
+\`\`\`
+
+Include a Mermaid flowchart showing the main user flow:
+\`\`\`mermaid
+flowchart TD
+  A[Start] --> B[Step]
+\`\`\``,
   },
   {
     id: 8,
@@ -169,9 +187,9 @@ Derive entities from the features defined in previous steps. Produce:
     roleHe: "ארכיטקט אינטגרציות",
     icon: "Plug",
     sections: [
-      { key: "integrations_table", type: "table", columns: ["name", "purpose", "cost", "alternative", "critical"] },
-      { key: "required_accounts", type: "list" },
-      { key: "risks", type: "list" },
+      { key: "integrations_table", type: "table", columns: ["name", "purpose", "cost", "alternative", "critical"], cardType: "IntegrationCard" },
+      { key: "required_accounts", type: "list", cardType: "ListCard" },
+      { key: "risks", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are an Integration Architect.
 Your goal: Identify all required external APIs, their costs, and fallback strategies.
@@ -244,11 +262,11 @@ export const BUSINESS_STEPS = [
     icon: "SearchCheck",
     canGoNoGo: true,
     sections: [
-      { key: "problem_statement", type: "text" },
-      { key: "stakeholders", type: "table", columns: ["role", "pain_points", "needs"] },
-      { key: "current_state", type: "text" },
-      { key: "desired_state", type: "text" },
-      { key: "discovery_questions", type: "list" },
+      { key: "problem_statement", type: "text", cardType: "TextCard", cardProps: { prominent: true } },
+      { key: "stakeholders", type: "table", columns: ["role", "pain_points", "needs"], cardType: "TableCard" },
+      { key: "current_state", type: "text", cardType: "TextCard" },
+      { key: "desired_state", type: "text", cardType: "TextCard" },
+      { key: "discovery_questions", type: "list", cardType: "ChecklistCard" },
     ],
     prompt: `You are a Business Analyst and Problem Investigator.
 Your goal: Understand the client's actual problem — not the solution they think they want.
@@ -267,9 +285,9 @@ Separate the stated problem from the underlying need. Produce:
     roleHe: "אנליסט מחקר שוק",
     icon: "Search",
     sections: [
-      { key: "problem_validated", type: "text" },
-      { key: "existing_solutions", type: "list" },
-      { key: "gaps", type: "list" },
+      { key: "problem_validated", type: "text", cardType: "TextCard" },
+      { key: "existing_solutions", type: "list", cardType: "ListCard" },
+      { key: "gaps", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Market Research Analyst.
 Your goal: Validate the problem exists broadly, identify existing solutions and their gaps.
@@ -286,18 +304,18 @@ Focus on B2B context and the client's industry. Produce:
     roleHe: "יועץ עסקי",
     icon: "Building",
     sections: [
-      { key: "business_objectives", type: "list" },
-      { key: "success_metrics", type: "table", columns: ["metric", "owner", "target"] },
-      { key: "constraints", type: "text" },
-      { key: "decision_makers", type: "list" },
-      { key: "end_users", type: "list" },
+      { key: "business_objectives", type: "list", cardType: "ListCard" },
+      { key: "success_metrics", type: "table", columns: ["metric", "owner", "target"], cardType: "TableCard" },
+      { key: "constraints", type: "text", cardType: "TextCard" },
+      { key: "decision_makers", type: "list", cardType: "ListCard" },
+      { key: "end_users", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Business Consultant.
 Your goal: Understand the client's business objectives, constraints, and who makes decisions.
 Distinguish between decision makers, influencers, and end users. Produce:
 - business_objectives: What the client's business wants to achieve (bullet list)
 - success_metrics: Table of metrics with who owns them and target values
-- constraints: Budget, timeline, and resource constraints
+- constraints: Known limitations and resource constraints
 - decision_makers: Who approves decisions? (bullet list with name/role)
 - end_users: Who will use the system daily? (bullet list with role and context)`,
   },
@@ -309,14 +327,14 @@ Distinguish between decision makers, influencers, and end users. Produce:
     roleHe: "ארכיטקט + יועץ",
     icon: "Handshake",
     sections: [
-      { key: "solution_options", type: "table", columns: ["approach", "pros", "cons", "estimated_cost", "timeline"] },
-      { key: "recommended_approach", type: "text" },
-      { key: "tradeoffs", type: "list" },
+      { key: "solution_options", type: "table", columns: ["approach", "pros", "cons", "complexity"], cardType: "TableCard" },
+      { key: "recommended_approach", type: "text", cardType: "TextCard" },
+      { key: "tradeoffs", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Solution Architect and Consultant.
 Your goal: Propose 2-3 solution approaches with clear trade-offs, get alignment before detailing.
 Present options in business language, not technical jargon. Produce:
-- solution_options: Table of 2-3 approaches with pros, cons, cost estimate, and timeline
+- solution_options: Table of 2-3 approaches with pros, cons, and complexity level
 - recommended_approach: Which approach you recommend and why (2-3 sentences)
 - tradeoffs: Key trade-offs the client should understand`,
   },
@@ -328,11 +346,11 @@ Present options in business language, not technical jargon. Produce:
     roleHe: "מנהל פרויקט + אנליסט סיכונים",
     icon: "Scale",
     sections: [
-      { key: "in_scope", type: "list" },
-      { key: "out_of_scope", type: "list" },
-      { key: "risks", type: "table", columns: ["risk", "probability", "impact", "mitigation"] },
-      { key: "assumptions", type: "list" },
-      { key: "dependencies", type: "list" },
+      { key: "in_scope", type: "list", cardType: "ChecklistCard", cardProps: { accent: "green" } },
+      { key: "out_of_scope", type: "list", cardType: "ChecklistCard", cardProps: { accent: "red" } },
+      { key: "risks", type: "table", columns: ["risk", "probability", "impact", "mitigation"], cardType: "TableCard" },
+      { key: "assumptions", type: "list", cardType: "ListCard" },
+      { key: "dependencies", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are a Project Manager and Risk Analyst.
 Your goal: Define what's in scope, what's out, what could go wrong, and what we're assuming.
@@ -351,11 +369,11 @@ Be explicit about change request implications. Produce:
     roleHe: "ארכיטקט פתרונות",
     icon: "Server",
     sections: [
-      { key: "client_environment", type: "text" },
-      { key: "tech_stack", type: "text" },
-      { key: "auth_strategy", type: "text" },
-      { key: "hosting", type: "text" },
-      { key: "nfrs", type: "table", columns: ["requirement", "target", "notes"] },
+      { key: "client_environment", type: "text", cardType: "TextCard" },
+      { key: "tech_stack", type: "text", cardType: "TechStackCard" },
+      { key: "auth_strategy", type: "text", cardType: "TextCard" },
+      { key: "hosting", type: "text", cardType: "TextCard" },
+      { key: "nfrs", type: "table", columns: ["requirement", "target", "notes"], cardType: "TableCard" },
     ],
     prompt: `You are a Solutions Architect.
 Default stack: React + Vite + TailwindCSS + Base44 BaaS (Deno functions).
@@ -364,7 +382,13 @@ Ask about the client's existing technical environment. Prefer integrating with w
 - tech_stack: Recommended technology stack with justification
 - auth_strategy: Authentication and authorization approach
 - hosting: Hosting and deployment strategy
-- nfrs: Non-functional requirements table`,
+- nfrs: Non-functional requirements table
+
+Include a Mermaid architecture diagram showing system components and their connections. Use this format:
+\`\`\`mermaid
+graph TD
+  A[Component] --> B[Component]
+\`\`\``,
   },
   {
     id: 7,
@@ -374,15 +398,27 @@ Ask about the client's existing technical environment. Prefer integrating with w
     roleHe: "ארכיטקט מערכת + מעצב UX",
     icon: "Database",
     sections: [
-      { key: "entities", type: "table", columns: ["name", "key_fields", "relations"] },
-      { key: "screens", type: "list" },
-      { key: "user_flows", type: "list" },
+      { key: "entities", type: "table", columns: ["name", "key_fields", "relations"], cardType: "TableCard" },
+      { key: "screens", type: "list", cardType: "ListCard" },
+      { key: "user_flows", type: "list", cardType: "DiagramCard" },
     ],
     prompt: `You are a System Architect and UX Designer.
 Your goal: Define the data model, screens, and key user flows. Produce:
 - entities: Table of entities with name, key fields, and relationships
 - screens: List of screens/pages (bullet list with brief description)
-- user_flows: Key user journeys as step-by-step flows`,
+- user_flows: Key user journeys as step-by-step flows
+
+Include a Mermaid ER diagram showing entity relationships:
+\`\`\`mermaid
+erDiagram
+  ENTITY1 ||--o{ ENTITY2 : has
+\`\`\`
+
+Include a Mermaid flowchart showing the main user flow:
+\`\`\`mermaid
+flowchart TD
+  A[Start] --> B[Step]
+\`\`\``,
   },
   {
     id: 8,
@@ -392,9 +428,9 @@ Your goal: Define the data model, screens, and key user flows. Produce:
     roleHe: "ארכיטקט אינטגרציות",
     icon: "Plug",
     sections: [
-      { key: "client_systems", type: "list" },
-      { key: "integrations_table", type: "table", columns: ["name", "purpose", "cost", "alternative", "critical"] },
-      { key: "risks", type: "list" },
+      { key: "client_systems", type: "list", cardType: "ListCard" },
+      { key: "integrations_table", type: "table", columns: ["name", "purpose", "cost", "alternative", "critical"], cardType: "IntegrationCard" },
+      { key: "risks", type: "list", cardType: "ListCard" },
     ],
     prompt: `You are an Integration Architect.
 Focus on the client's existing systems (CRM, ERP, communication tools etc.). Produce:
@@ -404,7 +440,7 @@ Focus on the client's existing systems (CRM, ERP, communication tools etc.). Pro
   },
   {
     id: 9,
-    key: "sow_pricing",
+    key: "sow",
     required: "mandatory",
     role: "Business Development + Technical Writer",
     roleHe: "פיתוח עסקי + כותב טכני",
@@ -412,16 +448,16 @@ Focus on the client's existing systems (CRM, ERP, communication tools etc.). Pro
     isSynthesis: true,
     sections: [],
     prompt: `You are a Business Development specialist and Technical Writer.
-Your goal: Create a professional Statement of Work (SOW) for the client.
-This is an EXTERNAL document — clear, professional, protects both parties.
+Your goal: Create a professional Statement of Work (SOW) summarizing the discovery process.
+This is an INTERNAL reference document — technical, thorough, and actionable.
+Do NOT include pricing, payment terms, or specific timeline dates.
 Synthesize ALL previous steps into a complete SOW with sections:
 - Executive Summary
 - Problem Statement
-- Scope of Work (deliverables per milestone)
-- Milestones & Timeline
-- Investment (pricing per milestone, payment terms)
+- Scope of Work (deliverables organized by milestone/phase)
+- Technical Architecture Summary
 - Assumptions & Dependencies
-- Change Request Process
+- Risks & Mitigations
 - Why CatalystAI
 
 CRITICAL: Check for contradictions between steps. If you find one, mark the section with:
@@ -468,10 +504,9 @@ export const SYNTHESIS_SECTION_SOURCES = {
     executive_summary: [1, 3],
     problem_statement: [1],
     scope_of_work: [5],
-    milestones_timeline: [5, 4],
-    investment: [4],
+    technical_architecture: [6],
     assumptions_dependencies: [5],
-    change_request: [],
+    risks_mitigations: [5],
     why_catalystai: [],
   },
 };
