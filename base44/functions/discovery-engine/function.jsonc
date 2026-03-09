@@ -1,0 +1,4 @@
+{
+  "name": "discovery-engine",
+  "entry": "index.ts"
+}

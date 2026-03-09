@@ -21,6 +21,7 @@ export const backendFunctions = {
   publishBlogToWebsite: (data) => invoke('publish-blog-to-website', data),
   sendNewsletter: (data) => invoke('send-newsletter', data),
   detectContentSignals: (data) => invoke('detect-content-signals', data || {}),
+  discoveryEngine: (data) => invoke('discovery-engine', data),
   scanExternalTrends: (data) => invoke('scan-external-trends', data || {}),
   strategicBrain: (data) => invoke('strategic-brain', data || {}),
 };
