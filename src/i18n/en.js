@@ -691,6 +691,14 @@ export default {
       repurposeFailed: 'Failed to repurpose',
       repurpose: 'Repurpose',
     },
+    stats: {
+      updateStats: 'Update Stats',
+      impressions: 'Impressions',
+      engagements: 'Engagements',
+      clicks: 'Clicks',
+      save: 'Save',
+      saved: 'Stats updated',
+    },
     blog: {
       newBlogPost: 'New Blog Post',
       createFromRawInput: 'Create Blog from Raw Input',
@@ -1091,6 +1099,9 @@ export default {
       notConfiguredSub: 'Set up your brand voice to guide all AI-generated content.',
       suggestedTopics: 'Suggested topics',
       suggestedTone: 'Suggested tone',
+      previewSample: 'Preview Sample Post',
+      previewLoading: 'Generating preview...',
+      closePreview: 'Close Preview',
     },
     usage: {
       totalCalls: 'Total Calls This Month',

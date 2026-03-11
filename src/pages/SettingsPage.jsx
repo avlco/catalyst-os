@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n';
 import { useThemeStore } from '@/stores/themeStore';
-import { userSettingsHooks, subscriberHooks, aiCallLogHooks, contentTemplateHooks } from '@/api/hooks';
+import { userSettingsHooks, subscriberHooks, aiCallLogHooks, contentTemplateHooks, brandVoiceHooks, rawInputHooks } from '@/api/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Settings, Github, Globe, Shield, BarChart, Users, Plus, LogOut, Upload, Download, Trash2, Pencil, FileText } from 'lucide-react';
+import { Settings, Github, Globe, Shield, BarChart, Users, Plus, LogOut, Upload, Download, Trash2, Pencil, FileText, Sparkles, X, Mic, Loader2, Eye } from 'lucide-react';
 import { backendFunctions } from '@/api/backendFunctions';
 
 // ════════════════════════════════════════════════════════════════════
@@ -955,6 +955,370 @@ function UsageTab() {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// Tag Input — reusable for topics + tone_attributes
+// ════════════════════════════════════════════════════════════════════
+function TagInput({ value = [], onChange, placeholder, suggestions = [] }) {
+  const [input, setInput] = useState('');
+
+  const addTag = (tag) => {
+    const trimmed = tag.trim();
+    if (trimmed && !value.includes(trimmed)) {
+      onChange([...value, trimmed]);
+    }
+    setInput('');
+  };
+
+  const removeTag = (index) => {
+    onChange(value.filter((_, i) => i !== index));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(input);
+    } else if (e.key === 'Backspace' && !input && value.length) {
+      removeTag(value.length - 1);
+    }
+  };
+
+  const unusedSuggestions = suggestions.filter(s => !value.includes(s));
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5 p-2 min-h-[42px] rounded-md border border-border bg-background">
+        {value.map((tag, i) => (
+          <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-body-m">
+            {tag}
+            <button type="button" onClick={() => removeTag(i)} className="hover:text-destructive">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={value.length === 0 ? placeholder : ''}
+          className="flex-1 min-w-[120px] bg-transparent outline-none text-body-m placeholder:text-muted-foreground"
+        />
+      </div>
+      {unusedSuggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {unusedSuggestions.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => addTag(s)}
+              className="px-2 py-0.5 rounded-md text-caption text-muted-foreground bg-muted hover:bg-muted/80 hover:text-foreground transition-colors"
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+// AI Draft Button — calls assist-brand-voice for a specific field
+// ════════════════════════════════════════════════════════════════════
+function AiDraftButton({ field, currentValue, onDraft }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+
+  const handleDraft = async () => {
+    setLoading(true);
+    try {
+      const result = await backendFunctions.assistBrandVoice({ field, currentValue });
+      if (result?.draft) {
+        onDraft(result.draft);
+      }
+    } catch (err) {
+      toast.error(err.message || t('common.error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      onClick={handleDraft}
+      disabled={loading}
+      className="text-primary"
+    >
+      <Sparkles className="w-3.5 h-3.5 me-1" />
+      {loading ? t('settings.brandVoice.aiDrafting') : t('settings.brandVoice.aiDraft')}
+    </Button>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Brand Voice Tab
+// ════════════════════════════════════════════════════════════════════
+function BrandVoiceTab() {
+  const { t, language } = useTranslation();
+  const { data: brandVoiceList = [], isLoading } = brandVoiceHooks.useList();
+  const createBrandVoice = brandVoiceHooks.useCreate();
+  const updateBrandVoice = brandVoiceHooks.useUpdate();
+  const createRawInput = rawInputHooks.useCreate();
+  const existing = brandVoiceList[0];
+
+  const [form, setForm] = useState({
+    identity: '',
+    audience: '',
+    topics: [],
+    tone_attributes: [],
+    voice_do: '',
+    voice_dont: '',
+    translation_layer: '',
+  });
+
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewContent, setPreviewContent] = useState(null);
+
+  useEffect(() => {
+    if (existing) {
+      setForm({
+        identity: existing.identity || '',
+        audience: existing.audience || '',
+        topics: existing.topics || [],
+        tone_attributes: existing.tone_attributes || [],
+        voice_do: existing.voice_do || '',
+        voice_dont: existing.voice_dont || '',
+        translation_layer: existing.translation_layer || '',
+      });
+    }
+  }, [existing]);
+
+  const update = useCallback((key, value) => setForm(prev => ({ ...prev, [key]: value })), []);
+
+  const handleSave = async () => {
+    try {
+      if (existing) {
+        await updateBrandVoice.mutateAsync({ id: existing.id, data: form });
+      } else {
+        await createBrandVoice.mutateAsync(form);
+      }
+      toast.success(t('settings.brandVoice.saved'));
+    } catch (err) {
+      toast.error(err.message || t('settings.brandVoice.failedToSave'));
+    }
+  };
+
+  const handlePreview = async () => {
+    try {
+      setPreviewLoading(true);
+      setPreviewContent(null);
+      // Create a temporary RawInput for the preview
+      const rawInput = await createRawInput.mutateAsync({
+        body: "Here's a short sample to preview my brand voice",
+        campaign: 'preview',
+        input_type: 'text',
+      });
+      const result = await backendFunctions.generateContent({
+        rawInputId: rawInput.id,
+        platforms: ['linkedin_personal'],
+        tone: 'professional',
+        language,
+      });
+      // result may contain created items — grab the first one
+      const items = result?.items || result?.created || [];
+      const first = Array.isArray(items) ? items[0] : null;
+      if (first) {
+        setPreviewContent({ title: first.title || '', body: first.body || '' });
+      } else {
+        // Fallback: the function may return differently
+        setPreviewContent({ title: result?.title || '', body: result?.body || result?.content || 'Preview generated — check Pipeline tab.' });
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to generate preview');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const suggestedTopics = [
+    'AI', 'Technology', 'Strategy', 'Operations', 'Marketing',
+    'Sales', 'Analytics', 'Finance', 'Management', 'Development',
+  ];
+
+  const suggestedTone = [
+    'Professional', 'Warm', 'Friendly', 'Accessible', 'Curious',
+    'Confident', 'Practical', 'Insightful',
+  ];
+
+  if (isLoading) return <Skeleton className="h-64" />;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-body-m text-muted-foreground">{t('settings.brandVoice.subtitle')}</p>
+
+      {/* Identity */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-l font-semibold">{t('settings.brandVoice.identity')}</h3>
+              <p className="text-caption text-muted-foreground">{t('settings.brandVoice.identityDesc')}</p>
+            </div>
+            <AiDraftButton field="identity" currentValue={form.identity} onDraft={v => update('identity', v)} />
+          </div>
+          <Textarea
+            rows={3}
+            placeholder={t('settings.brandVoice.identityPlaceholder')}
+            value={form.identity}
+            onChange={e => update('identity', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Audience */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-l font-semibold">{t('settings.brandVoice.audience')}</h3>
+              <p className="text-caption text-muted-foreground">{t('settings.brandVoice.audienceDesc')}</p>
+            </div>
+            <AiDraftButton field="audience" currentValue={form.audience} onDraft={v => update('audience', v)} />
+          </div>
+          <Textarea
+            rows={3}
+            placeholder={t('settings.brandVoice.audiencePlaceholder')}
+            value={form.audience}
+            onChange={e => update('audience', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Topics */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div>
+            <h3 className="text-body-l font-semibold">{t('settings.brandVoice.topics')}</h3>
+            <p className="text-caption text-muted-foreground">{t('settings.brandVoice.topicsDesc')}</p>
+          </div>
+          <TagInput
+            value={form.topics}
+            onChange={v => update('topics', v)}
+            placeholder={t('settings.brandVoice.topicsPlaceholder')}
+            suggestions={suggestedTopics}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Tone */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div>
+            <h3 className="text-body-l font-semibold">{t('settings.brandVoice.toneAttributes')}</h3>
+            <p className="text-caption text-muted-foreground">{t('settings.brandVoice.toneDesc')}</p>
+          </div>
+          <TagInput
+            value={form.tone_attributes}
+            onChange={v => update('tone_attributes', v)}
+            placeholder={t('settings.brandVoice.tonePlaceholder')}
+            suggestions={suggestedTone}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Voice Do */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-l font-semibold">{t('settings.brandVoice.voiceDo')}</h3>
+              <p className="text-caption text-muted-foreground">{t('settings.brandVoice.voiceDoDesc')}</p>
+            </div>
+            <AiDraftButton field="voice_do" currentValue={form.voice_do} onDraft={v => update('voice_do', v)} />
+          </div>
+          <Textarea
+            rows={4}
+            placeholder={t('settings.brandVoice.voiceDoPlaceholder')}
+            value={form.voice_do}
+            onChange={e => update('voice_do', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Voice Don't */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-l font-semibold">{t('settings.brandVoice.voiceDont')}</h3>
+              <p className="text-caption text-muted-foreground">{t('settings.brandVoice.voiceDontDesc')}</p>
+            </div>
+            <AiDraftButton field="voice_dont" currentValue={form.voice_dont} onDraft={v => update('voice_dont', v)} />
+          </div>
+          <Textarea
+            rows={4}
+            placeholder={t('settings.brandVoice.voiceDontPlaceholder')}
+            value={form.voice_dont}
+            onChange={e => update('voice_dont', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Translation Layer */}
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-l font-semibold">{t('settings.brandVoice.translationLayer')}</h3>
+              <p className="text-caption text-muted-foreground">{t('settings.brandVoice.translationLayerDesc')}</p>
+            </div>
+            <AiDraftButton field="translation_layer" currentValue={form.translation_layer} onDraft={v => update('translation_layer', v)} />
+          </div>
+          <Textarea
+            rows={5}
+            placeholder={t('settings.brandVoice.translationLayerPlaceholder')}
+            value={form.translation_layer}
+            onChange={e => update('translation_layer', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={handlePreview}
+          disabled={previewLoading}
+        >
+          {previewLoading ? (
+            <><Loader2 className="w-4 h-4 me-1 animate-spin" /> {t('settings.brandVoice.previewLoading')}</>
+          ) : (
+            <><Eye className="w-4 h-4 me-1" /> {t('settings.brandVoice.previewSample')}</>
+          )}
+        </Button>
+        <Button onClick={handleSave}>{t('common.save')}</Button>
+      </div>
+
+      {previewContent && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            {previewContent.title && (
+              <h3 className="text-body-l font-semibold">{previewContent.title}</h3>
+            )}
+            <p className="text-body-m text-muted-foreground whitespace-pre-wrap">{previewContent.body}</p>
+            <div className="flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setPreviewContent(null)}>
+                <X className="w-3 h-3 me-1" /> {t('settings.brandVoice.closePreview')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
 // Main Settings Page
 // ════════════════════════════════════════════════════════════════════
 export default function SettingsPage() {
@@ -972,6 +1336,7 @@ export default function SettingsPage() {
           <TabsTrigger value="subscribers">{t('settings.tabs.subscribers')}</TabsTrigger>
           <TabsTrigger value="templates">{t('settings.tabs.templates')}</TabsTrigger>
           <TabsTrigger value="usage">{t('settings.tabs.usage')}</TabsTrigger>
+          <TabsTrigger value="brandVoice">{t('settings.tabs.brandVoice')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="integrations"><IntegrationsTab /></TabsContent>
@@ -980,6 +1345,7 @@ export default function SettingsPage() {
         <TabsContent value="subscribers"><SubscribersTab /></TabsContent>
         <TabsContent value="templates"><TemplatesTab /></TabsContent>
         <TabsContent value="usage"><UsageTab /></TabsContent>
+        <TabsContent value="brandVoice"><BrandVoiceTab /></TabsContent>
       </Tabs>
     </div>
   );

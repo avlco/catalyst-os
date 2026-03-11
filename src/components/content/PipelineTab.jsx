@@ -8,12 +8,76 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Copy, Check, RefreshCw, X } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Copy, Check, RefreshCw, X, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { backendFunctions } from '@/api/backendFunctions';
 import { statusVariant } from './contentConstants';
 
-function ContentCard({ item, onApprove, onCopy, onRegenerate, regeneratingId, onSchedule, onInlineUpdate }) {
+function StatsPopover({ item, onUpdateStats }) {
+  const { t } = useTranslation();
+  const [stats, setStats] = useState({
+    impressions: item.impressions || 0,
+    engagements: item.engagements || 0,
+    clicks: item.clicks || 0,
+  });
+  const [open, setOpen] = useState(false);
+
+  const handleSave = () => {
+    onUpdateStats(item, stats);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="ghost">
+          <BarChart3 className="w-3.5 h-3.5 me-1" />
+          {t('content.stats.updateStats')}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64">
+        <div className="space-y-3">
+          <h4 className="text-body-m font-semibold">{t('content.stats.updateStats')}</h4>
+          <div className="space-y-2">
+            <div>
+              <label className="text-caption text-muted-foreground block mb-1">{t('content.stats.impressions')}</label>
+              <Input
+                type="number"
+                min={0}
+                value={stats.impressions}
+                onChange={(e) => setStats(prev => ({ ...prev, impressions: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="text-caption text-muted-foreground block mb-1">{t('content.stats.engagements')}</label>
+              <Input
+                type="number"
+                min={0}
+                value={stats.engagements}
+                onChange={(e) => setStats(prev => ({ ...prev, engagements: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="text-caption text-muted-foreground block mb-1">{t('content.stats.clicks')}</label>
+              <Input
+                type="number"
+                min={0}
+                value={stats.clicks}
+                onChange={(e) => setStats(prev => ({ ...prev, clicks: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+          </div>
+          <Button size="sm" className="w-full" onClick={handleSave}>
+            {t('content.stats.save')}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ContentCard({ item, onApprove, onCopy, onRegenerate, regeneratingId, onSchedule, onInlineUpdate, onUpdateStats }) {
   const { t } = useTranslation();
   const [editingField, setEditingField] = useState(null); // 'title' | 'body' | null
   const [editValue, setEditValue] = useState('');
@@ -124,25 +188,28 @@ function ContentCard({ item, onApprove, onCopy, onRegenerate, regeneratingId, on
             <Copy className="w-3 h-3 me-1" /> {t('content.pipeline.copy')}
           </Button>
           {item.status === 'published' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                try {
-                  toast.info(t('content.pipeline.generatingVariants'));
-                  const repurposeResult = await backendFunctions.repurposeContent({
-                    contentItemId: item.id,
-                    targetPlatforms: ['linkedin_personal', 'twitter'],
-                  });
-                  toast.success(`${t('content.pipeline.createdVariants')} ${repurposeResult.created}`);
-                } catch (err) {
-                  toast.error(err.message || t('content.pipeline.repurposeFailed'));
-                }
-              }}
-            >
-              <RefreshCw className="w-3.5 h-3.5 me-1" />
-              {t('content.pipeline.repurpose')}
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    toast.info(t('content.pipeline.generatingVariants'));
+                    const repurposeResult = await backendFunctions.repurposeContent({
+                      contentItemId: item.id,
+                      targetPlatforms: ['linkedin_personal', 'twitter'],
+                    });
+                    toast.success(`${t('content.pipeline.createdVariants')} ${repurposeResult.created}`);
+                  } catch (err) {
+                    toast.error(err.message || t('content.pipeline.repurposeFailed'));
+                  }
+                }}
+              >
+                <RefreshCw className="w-3.5 h-3.5 me-1" />
+                {t('content.pipeline.repurpose')}
+              </Button>
+              <StatsPopover item={item} onUpdateStats={onUpdateStats} />
+            </>
           )}
         </div>
       </CardContent>
@@ -217,6 +284,11 @@ export default function PipelineTab() {
     toast.success(t('content.pipeline.updated'));
   };
 
+  const handleUpdateStats = (item, stats) => {
+    updateItem.mutate({ id: item.id, data: stats });
+    toast.success(t('content.stats.saved'));
+  };
+
   return (
     <div>
       {/* Mobile column switcher */}
@@ -252,6 +324,7 @@ export default function PipelineTab() {
                   regeneratingId={regeneratingId}
                   onSchedule={handleSchedule}
                   onInlineUpdate={handleInlineUpdate}
+                  onUpdateStats={handleUpdateStats}
                 />
               ))}
             </div>

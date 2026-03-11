@@ -691,6 +691,14 @@ export default {
       repurposeFailed: 'שיחזור נכשל',
       repurpose: 'שחזר לפלטפורמה',
     },
+    stats: {
+      updateStats: 'עדכן נתונים',
+      impressions: 'חשיפות',
+      engagements: 'מעורבות',
+      clicks: 'לחיצות',
+      save: 'שמור',
+      saved: 'הנתונים עודכנו',
+    },
     blog: {
       newBlogPost: 'פוסט בלוג חדש',
       createFromRawInput: 'צור בלוג מקלט גולמי',
@@ -1091,6 +1099,9 @@ export default {
       notConfiguredSub: 'הגדר את קול המותג שלך כדי להנחות את כל התוכן שנוצר על ידי AI.',
       suggestedTopics: 'נושאים מוצעים',
       suggestedTone: 'טון מוצע',
+      previewSample: 'תצוגה מקדימה של פוסט',
+      previewLoading: 'מייצר תצוגה מקדימה...',
+      closePreview: 'סגור תצוגה מקדימה',
     },
     usage: {
       totalCalls: 'סה"כ קריאות החודש',
