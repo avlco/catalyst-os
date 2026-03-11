@@ -48,6 +48,31 @@
       "type": "string",
       "description": "CatalystAI Facebook page URL"
     },
+    "linkedin_connected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether LinkedIn OAuth connector is verified"
+    },
+    "linkedin_person_urn": {
+      "type": "string",
+      "description": "LinkedIn person URN (urn:li:person:xxxxx) for personal posts"
+    },
+    "linkedin_display_name": {
+      "type": "string",
+      "description": "LinkedIn display name"
+    },
+    "linkedin_avatar_url": {
+      "type": "string",
+      "description": "LinkedIn profile picture URL"
+    },
+    "linkedin_company_id": {
+      "type": "string",
+      "description": "Selected LinkedIn Company Page organization ID"
+    },
+    "linkedin_company_name": {
+      "type": "string",
+      "description": "Selected LinkedIn Company Page display name"
+    },
     "default_content_lang": {
       "type": "string",
       "enum": ["en", "he", "both"],

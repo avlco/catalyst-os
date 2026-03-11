@@ -16,6 +16,7 @@
     "signal_ref": { "type": "string", "description": "ID of the entity that triggered the signal" },
     "content_plan_id": { "type": "string", "description": "ContentPlan that generated this item" },
     "scheduled_date": { "type": "string" },
+    "scheduled_time": { "type": "string", "description": "HH:MM time for scheduled publishing (e.g. 09:00)" },
     "published_date": { "type": "string" },
     "seo_title": { "type": "string", "maxLength": 60 },
     "seo_description": { "type": "string", "maxLength": 160 },
