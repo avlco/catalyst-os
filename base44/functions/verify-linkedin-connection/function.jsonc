@@ -1,0 +1,4 @@
+{
+  "name": "verify-linkedin-connection",
+  "entry": "index.ts"
+}
