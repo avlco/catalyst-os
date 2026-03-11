@@ -19,3 +19,5 @@ export const Subscriber = base44.entities.Subscriber;
 export const ContentTemplate = base44.entities.ContentTemplate;
 export const Document = base44.entities.Document;
 export const AICallLog = base44.entities.AICallLog;
+export const BrandVoice = base44.entities.BrandVoice;
+export const ContentPlan = base44.entities.ContentPlan;
