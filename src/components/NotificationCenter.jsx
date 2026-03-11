@@ -8,6 +8,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { he as heLocale } from 'date-fns/locale';
+import { FollowUpDialog } from '@/components/clients/FollowUpDialog';
 
 const priorityVariants = {
   low: 'neutral',
@@ -39,6 +40,8 @@ export function NotificationCenter({ open, onClose }) {
   const updateNotification = notificationHooks.useUpdate();
   const dismissNotification = notificationHooks.useUpdate();
 
+  const [followUpClientId, setFollowUpClientId] = useState(null);
+
   const visible = useMemo(() => notifications.filter(n => !n.dismissed), [notifications]);
   const unread = useMemo(() => visible.filter(n => !n.read), [visible]);
   const grouped = useMemo(() => groupByDay(visible.slice(0, 50), t, language), [visible, t, language]);
@@ -55,6 +58,10 @@ export function NotificationCenter({ open, onClose }) {
   const handleClick = (notification) => {
     if (!notification.read) {
       updateNotification.mutate({ id: notification.id, data: { read: true } });
+    }
+    if (notification.type === 'stale_lead' && notification.entity_id) {
+      setFollowUpClientId(notification.entity_id);
+      return;
     }
     if (notification.action_url && notification.action_url.startsWith('/')) {
       navigate(notification.action_url);
@@ -146,6 +153,21 @@ export function NotificationCenter({ open, onClose }) {
           )}
         </div>
       </div>
+
+      <FollowUpDialog
+        open={!!followUpClientId}
+        onOpenChange={(open) => {
+          if (!open) {
+            const clientId = followUpClientId;
+            setFollowUpClientId(null);
+            if (clientId) {
+              navigate(`/clients/${clientId}`);
+              onClose();
+            }
+          }
+        }}
+        clientId={followUpClientId}
+      />
     </>
   );
 }

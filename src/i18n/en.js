@@ -478,6 +478,19 @@ export default {
       both: 'Both',
       lostReason: 'Lost Reason',
     },
+    followUp: {
+      title: 'Follow-up Draft',
+      generating: 'Generating follow-up...',
+      subject: 'Subject',
+      body: 'Message',
+      suggestedAction: 'Suggested: {{action}}',
+      copyClose: 'Copy & Close',
+      logInteraction: 'Log as Interaction',
+      copied: 'Copied to clipboard',
+      logged: 'Logged as interaction',
+      error: 'Failed to generate follow-up',
+      retry: 'Retry',
+    },
   },
 
   // Business Projects

@@ -478,6 +478,19 @@ export default {
       both: 'שניהם',
       lostReason: 'סיבת הפסד',
     },
+    followUp: {
+      title: 'טיוטת פולו-אפ',
+      generating: 'מייצר טיוטה...',
+      subject: 'נושא',
+      body: 'הודעה',
+      suggestedAction: 'מומלץ: {{action}}',
+      copyClose: 'העתק וסגור',
+      logInteraction: 'תעד כאינטראקציה',
+      copied: 'הועתק ללוח',
+      logged: 'נרשם כאינטראקציה',
+      error: 'יצירת טיוטה נכשלה',
+      retry: 'נסה שוב',
+    },
   },
 
   // Business Projects
