@@ -102,6 +102,17 @@ export default {
       atRisk: 'בסיכון',
       healthRed: 'בריאות: אדום',
     },
+    actionDialog: {
+      approveContent: 'סקירת תוכן',
+      approve: 'אשר',
+      reject: 'דחה',
+      edit: 'ערוך',
+      saveApprove: 'שמור ואשר',
+      approved: 'תוכן אושר',
+      rejected: 'תוכן הועבר לארכיון',
+      opportunityAction: 'פעולת לקוח',
+      viewClient: 'צפה בלקוח',
+    },
   },
 
   // Projects

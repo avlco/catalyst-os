@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from '@/i18n';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -22,6 +22,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ActionDialog } from '@/components/dashboard/ActionDialog';
+import { FollowUpDialog } from '@/components/clients/FollowUpDialog';
 import { format } from 'date-fns';
 import { he as heLocale } from 'date-fns/locale';
 
@@ -93,6 +95,9 @@ export default function Dashboard() {
   const { data: businessProjects, isLoading: bpLoading, isError: bpError } = useBusinessProjects();
   const { data: contentItems, isLoading: contentLoading, isError: contentError } = useContentItems();
   const { data: personalProjects, isLoading: ppLoading, isError: ppError } = personalProjectHooks.useList();
+
+  const [actionDialog, setActionDialog] = useState({ open: false, type: null, entity: null });
+  const [followUpClientId, setFollowUpClientId] = useState(null);
 
   const isLoading = tasksLoading || clientsLoading || bpLoading || contentLoading || ppLoading;
   const isError = tasksError || clientsError || bpError || contentError || ppError;
@@ -290,9 +295,12 @@ export default function Dashboard() {
               {staleClients.slice(0, 3).map(client => (
                 <li key={client.id} className="flex items-center gap-2 text-body-m">
                   <Badge variant="warning">{t('dashboard.badges.stale')}</Badge>
-                  <Link to={`/clients/${client.id}`} className="text-primary hover:underline truncate">
+                  <button
+                    onClick={() => setFollowUpClientId(client.id)}
+                    className="text-primary hover:underline truncate text-start"
+                  >
                     {client.name}
-                  </Link>
+                  </button>
                 </li>
               ))}
               {redProjects.map(p => (
@@ -313,9 +321,12 @@ export default function Dashboard() {
             <ul className="space-y-2">
               {highScoreClients.slice(0, 5).map(client => (
                 <li key={client.id} className="flex items-center justify-between text-body-m">
-                  <Link to={`/clients/${client.id}`} className="text-primary hover:underline truncate">
+                  <button
+                    onClick={() => setActionDialog({ open: true, type: 'opportunity', entity: client })}
+                    className="text-primary hover:underline truncate text-start"
+                  >
                     {client.name}
-                  </Link>
+                  </button>
                   <Badge variant="success">Score: {client.lead_score}</Badge>
                 </li>
               ))}
@@ -332,7 +343,12 @@ export default function Dashboard() {
                   <Badge variant={item.status === 'approved' ? 'success' : 'neutral'}>
                     {t('common.statusLabels.' + item.status) || item.status}
                   </Badge>
-                  <span className="truncate">{item.title || item.platform}</span>
+                  <button
+                    onClick={() => setActionDialog({ open: true, type: 'content_approval', entity: item })}
+                    className="text-primary hover:underline truncate text-start"
+                  >
+                    {item.title || item.platform}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -358,6 +374,18 @@ export default function Dashboard() {
           </BriefingSection>
         )}
       </div>
+
+      <ActionDialog
+        open={actionDialog.open}
+        onOpenChange={open => setActionDialog(prev => ({ ...prev, open }))}
+        type={actionDialog.type}
+        entity={actionDialog.entity}
+      />
+      <FollowUpDialog
+        open={!!followUpClientId}
+        onOpenChange={open => !open && setFollowUpClientId(null)}
+        clientId={followUpClientId}
+      />
     </div>
   );
 }

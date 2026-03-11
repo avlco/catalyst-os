@@ -102,6 +102,17 @@ export default {
       atRisk: 'at risk',
       healthRed: 'Health: Red',
     },
+    actionDialog: {
+      approveContent: 'Review Content',
+      approve: 'Approve',
+      reject: 'Reject',
+      edit: 'Edit',
+      saveApprove: 'Save & Approve',
+      approved: 'Content approved',
+      rejected: 'Content archived',
+      opportunityAction: 'Client Action',
+      viewClient: 'View Client',
+    },
   },
 
   // Projects
