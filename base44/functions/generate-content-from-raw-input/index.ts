@@ -1,10 +1,45 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 
+function generateCampaignName(prefix: string): string {
+  const now = new Date();
+  const weekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7);
+  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}-${prefix}`;
+}
+
 function estimateTokens(text: string): number {
   return Math.ceil((text || "").length / 4);
 }
 function estimateCost(inputTokens: number, outputTokens: number): number {
   return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
+}
+
+const DEFAULT_BRAND_VOICE = `You are a content writer for CatalystAI (Aviel Cohen), a solo AI consultant and developer.
+Brand voice: Professional yet approachable. Technical depth without jargon. Focus on practical value.
+The audience is business professionals, tech leaders, and SMB owners.
+Always write in first person as Aviel Cohen.`;
+
+async function loadBrandVoice(b44: any): Promise<string> {
+  try {
+    const list = await b44.entities.BrandVoice.list();
+    const bv = list[0];
+    if (!bv?.identity) return DEFAULT_BRAND_VOICE;
+
+    const topics = (bv.topics || []).join(", ");
+    const tone = (bv.tone_attributes || []).join(", ");
+
+    return [
+      `Brand Identity: ${bv.identity}`,
+      `Target Audience: ${bv.audience}`,
+      topics ? `Core Topics: ${topics}` : "",
+      tone ? `Tone: ${tone}` : "",
+      bv.voice_do ? `Content MUST include: ${bv.voice_do}` : "",
+      bv.voice_dont ? `Content must NEVER include: ${bv.voice_dont}` : "",
+      bv.translation_layer ? `Translation Rules (convert technical language to business outcomes): ${bv.translation_layer}` : "",
+      "Always write in first person.",
+    ].filter(Boolean).join("\n");
+  } catch {
+    return DEFAULT_BRAND_VOICE;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -27,10 +62,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Raw input body is empty" }, { status: 400 });
     }
 
-    const brandVoice = `You are a content writer for CatalystAI (Aviel Cohen), a solo AI consultant and developer.
-Brand voice: Professional yet approachable. Technical depth without jargon. Focus on practical value.
-The audience is business professionals, tech leaders, and SMB owners.
-Always write in first person as Aviel Cohen.`;
+    const brandVoice = await loadBrandVoice(b44);
 
     const platformRules: Record<string, string> = {
       linkedin_personal: "LinkedIn personal post. Hook opener. 200-350 words. 3-5 hashtags. Personal CTA.",
@@ -71,6 +103,7 @@ Always write in first person as Aviel Cohen.`;
           source_type: rawInput.input_type === "github" ? "github" : "manual",
           ai_generated: true,
           approved_by_human: false,
+          campaign: rawInput.campaign || generateCampaignName('manual'),
         });
 
         createdIds.push(contentItem.id);
