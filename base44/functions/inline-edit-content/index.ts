@@ -1,32 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
-
-const DEFAULT_BRAND_VOICE = "";
-
-async function loadBrandVoice(b44: any): Promise<string> {
-  try {
-    const list = await b44.entities.BrandVoice.list();
-    const bv = list[0];
-    if (!bv?.identity) return DEFAULT_BRAND_VOICE;
-
-    const tone = (bv.tone_attributes || []).join(", ");
-
-    return [
-      `Brand Identity: ${bv.identity}`,
-      tone ? `Tone: ${tone}` : "",
-      bv.voice_do ? `Style guidelines (DO): ${bv.voice_do}` : "",
-      bv.voice_dont ? `Style guidelines (DON'T): ${bv.voice_dont}` : "",
-    ].filter(Boolean).join("\n");
-  } catch {
-    return DEFAULT_BRAND_VOICE;
-  }
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost } from "../_shared/brandVoicePrompt.ts";
 
 Deno.serve(async (req: Request) => {
   try {
@@ -43,13 +16,11 @@ Deno.serve(async (req: Request) => {
 
     const lang = language || "en";
     const startTime = Date.now();
-    const brandVoice = await loadBrandVoice(b44);
+    const bv = await loadBrandVoiceData(b44);
 
-    const brandSection = brandVoice
-      ? `\n--- Brand Voice Context ---\n${brandVoice}\n---\n`
-      : "";
-
-    const prompt = `You are a professional content editor.${brandSection}
+    const prompt = buildContentPrompt(bv, {
+      language: lang,
+      taskInstructions: `You are a professional content editor.
 
 Below is the full text of a post for context:
 """
@@ -61,9 +32,8 @@ The user has selected the following text:
 
 Instruction: ${instruction}
 
-${lang === "he" ? "IMPORTANT: Write your response in Hebrew." : "Write your response in English."}
-
-Return ONLY the replacement text that should replace the selected text. Do not include any explanation, preamble, or the rest of the post — just the edited replacement text.`;
+Return ONLY the replacement text that should replace the selected text. Do not include any explanation, preamble, or the rest of the post — just the edited replacement text.`,
+    });
 
     const result = await b44.integrations.Core.InvokeLLM({ prompt });
 

@@ -1,11 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost } from "../_shared/brandVoicePrompt.ts";
 
 Deno.serve(async (req) => {
   try {
@@ -25,15 +19,17 @@ Deno.serve(async (req) => {
     const body = (rawInput.body || "").slice(0, 2000);
     const languages = language === "both" ? ["en", "he"] : [language || "en"];
     const createdIds: string[] = [];
+    const bv = await loadBrandVoiceData(b44);
 
     for (const lang of languages) {
       const startTime = Date.now();
-      const prompt = `You are a professional blog writer for CatalystAI. Write in first person as Aviel Cohen, AI consultant and developer.
-
-Expand this into a 600-1000 word structured blog post with H2/H3 headings.
+      const prompt = buildContentPrompt(bv, {
+        platform: "blog",
+        language: lang,
+        taskInstructions: `Expand this into a 600-1000 word structured blog post with H2/H3 headings.
+Include Mermaid diagram blocks (\`\`\`mermaid) where relevant to visualize concepts. Include data tables where relevant.
 
 Topic: ${body}
-Language: ${lang === "he" ? "Hebrew (עברית)" : "English"}
 Category: ${category || "AI & Technology"}
 
 Also provide:
@@ -41,7 +37,8 @@ Also provide:
 - SEO description (max 160 chars)
 - 3-5 SEO keywords
 
-Return JSON: { "title": "...", "body": "...", "seo_title": "...", "seo_description": "...", "seo_keywords": ["..."] }`;
+Return JSON: { "title": "...", "body": "...", "seo_title": "...", "seo_description": "...", "seo_keywords": ["..."] }`,
+      });
       const result = await b44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: {

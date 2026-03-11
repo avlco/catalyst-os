@@ -1,38 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function generateCampaignName(prefix: string): string {
-  const now = new Date();
-  const weekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7);
-  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}-${prefix}`;
-}
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
-
-const DEFAULT_BRAND_VOICE = `CatalystAI — AI consultant helping SMBs leverage technology. Professional, warm, accessible. Focus on business outcomes.`;
-
-async function loadBrandVoice(b44: any): Promise<string> {
-  try {
-    const list = await b44.entities.BrandVoice.list();
-    const bv = list[0];
-    if (!bv?.identity) return DEFAULT_BRAND_VOICE;
-    const tone = (bv.tone_attributes || []).join(", ");
-    return [
-      bv.identity,
-      bv.audience ? `Audience: ${bv.audience}` : "",
-      tone ? `Tone: ${tone}` : "",
-      bv.voice_do ? `Include: ${bv.voice_do}` : "",
-      bv.voice_dont ? `Avoid: ${bv.voice_dont}` : "",
-      bv.translation_layer ? `Translation: ${bv.translation_layer}` : "",
-    ].filter(Boolean).join("\n");
-  } catch {
-    return DEFAULT_BRAND_VOICE;
-  }
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost, generateCampaignName } from "../_shared/brandVoicePrompt.ts";
 
 interface Signal {
   type: string;
@@ -262,12 +229,11 @@ async function gatherLearningData(contentItems: any[]): Promise<LearningData> {
 async function generateContentFromSignal(
   b44: any,
   signal: Signal,
-  brandVoice: string,
+  bv: any,
   learningContext: string
 ): Promise<any[]> {
-  const prompt = `${brandVoice}
-
-You are generating content suggestions based on a business signal.
+  const prompt = buildContentPrompt(bv, {
+    taskInstructions: `You are generating content suggestions based on a business signal.
 
 Signal type: ${signal.type}
 Context: ${signal.context}
@@ -289,7 +255,8 @@ Return JSON array:
   "body": "Full post content ready to publish",
   "language": "en",
   "tone": "professional" | "personal" | "educational"
-}]`;
+}]`,
+  });
 
   try {
     const result = await b44.integrations.Core.InvokeLLM({
@@ -379,7 +346,7 @@ Deno.serve(async (req) => {
     });
 
     // Load brand voice
-    const brandVoice = await loadBrandVoice(b44);
+    const bv = await loadBrandVoiceData(b44);
 
     let totalCreated = 0;
     const startTime = Date.now();
@@ -390,7 +357,7 @@ Deno.serve(async (req) => {
     const toProcess = filteredSignals.slice(0, 5);
 
     for (const signal of toProcess) {
-      const drafts = await generateContentFromSignal(b44, signal, brandVoice, learning.summary);
+      const drafts = await generateContentFromSignal(b44, signal, bv, learning.summary);
 
       for (const draft of drafts) {
         if (!draft.body || draft.body.length < 30) continue;
@@ -414,7 +381,7 @@ Deno.serve(async (req) => {
       }
 
       // Rough token estimates
-      totalInputTokens += estimateTokens(brandVoice + signal.context) + 400;
+      totalInputTokens += estimateTokens(JSON.stringify(bv) + signal.context) + 400;
       totalOutputTokens += estimateTokens(JSON.stringify(drafts));
     }
 

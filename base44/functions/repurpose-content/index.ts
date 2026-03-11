@@ -1,11 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost } from "../_shared/brandVoicePrompt.ts";
 
 Deno.serve(async (req: Request) => {
   try {
@@ -22,10 +16,12 @@ Deno.serve(async (req: Request) => {
 
     const body = (source.body || source.title || "").slice(0, 3000);
     const platforms = targetPlatforms.join(", ");
+    const bv = await loadBrandVoiceData(b44);
 
-    const prompt = `You are a social media expert for CatalystAI, a tech consultancy specializing in AI-powered business solutions.
-
-Given this blog post content, create platform-specific versions for: ${platforms}
+    const prompt = buildContentPrompt(bv, {
+      tone: source.tone || "professional",
+      language: source.language || "en",
+      taskInstructions: `Given this blog post content, create platform-specific versions for: ${platforms}
 
 Blog title: ${source.title}
 Blog content: ${body}
@@ -36,7 +32,8 @@ For each platform, generate appropriate content:
 - Facebook: Conversational, community-oriented
 
 Return JSON array:
-[{ "platform": "linkedin_personal", "title": "...", "body": "...", "language": "${source.language || 'en'}" }]`;
+[{ "platform": "linkedin_personal", "title": "...", "body": "...", "language": "${source.language || 'en'}" }]`,
+    });
 
     const result = await b44.integrations.Core.InvokeLLM({
       prompt,

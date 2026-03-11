@@ -1,49 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function generateCampaignName(prefix: string): string {
-  const now = new Date();
-  const weekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7);
-  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}-${prefix}`;
-}
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
-
-const DEFAULT_BRAND_VOICE = `CatalystAI — AI consultant helping SMBs leverage technology. Professional, warm, accessible. Focus on business outcomes.`;
-const DEFAULT_TOPICS = [
-  "AI for small business",
-  "business automation",
-  "digital transformation",
-  "SMB technology strategy",
-  "AI implementation ROI",
-];
-
-async function loadBrandVoice(b44: any): Promise<{ text: string; topics: string[] }> {
-  try {
-    const list = await b44.entities.BrandVoice.list();
-    const bv = list[0];
-    if (!bv?.identity) return { text: DEFAULT_BRAND_VOICE, topics: DEFAULT_TOPICS };
-
-    const topics = bv.topics?.length ? bv.topics : DEFAULT_TOPICS;
-    const tone = (bv.tone_attributes || []).join(", ");
-    const text = [
-      bv.identity,
-      bv.audience ? `Audience: ${bv.audience}` : "",
-      tone ? `Tone: ${tone}` : "",
-      bv.voice_do ? `Include: ${bv.voice_do}` : "",
-      bv.voice_dont ? `Avoid: ${bv.voice_dont}` : "",
-      bv.translation_layer ? `Translation: ${bv.translation_layer}` : "",
-    ].filter(Boolean).join("\n");
-
-    return { text, topics };
-  } catch {
-    return { text: DEFAULT_BRAND_VOICE, topics: DEFAULT_TOPICS };
-  }
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost, generateCampaignName } from "../_shared/brandVoicePrompt.ts";
 
 async function getRecentContentData(b44: any): Promise<{ titles: string[]; learningContext: string }> {
   try {
@@ -94,8 +50,8 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const b44 = base44.asServiceRole;
 
-    // Load brand voice and topics
-    const brandVoice = await loadBrandVoice(b44);
+    // Load brand voice data
+    const bv = await loadBrandVoiceData(b44);
 
     // Get recent content for deduplication + learning data
     const { titles: recentTitles, learningContext } = await getRecentContentData(b44);
@@ -112,12 +68,11 @@ Deno.serve(async (req) => {
     const startTime = Date.now();
 
     // Ask LLM for trending topics + content angles
-    const trendPrompt = `${brandVoice.text}
-
-You are a content strategist for a solo AI consultant targeting small and medium businesses (SMBs).
+    const trendPrompt = buildContentPrompt(bv, {
+      taskInstructions: `You are a content strategist for a solo AI consultant targeting small and medium businesses (SMBs).
 
 Current date: ${monthYear} (${quarter} ${now.getFullYear()})
-Core topics: ${brandVoice.topics.join(", ")}
+Core topics: ${bv.topics.join(", ")}
 ${recentContext}
 ${learningContext ? `\nLEARNING FROM PAST CONTENT:\n${learningContext}\nFavor platforms and tones with higher approval rates.\n` : ""}
 Based on your knowledge of current trends, generate 4-5 content suggestions that would resonate with SMB owners and decision-makers RIGHT NOW.
@@ -144,7 +99,8 @@ Return JSON array:
   "body": "Full post content ready to publish (300-500 words for blog, 150-250 for social)",
   "language": "en",
   "tone": "professional" | "personal" | "educational"
-}]`;
+}]`,
+    });
 
     const result = await b44.integrations.Core.InvokeLLM({
       prompt: trendPrompt,

@@ -1,30 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-
-function estimateTokens(text: string): number {
-  return Math.ceil((text || "").length / 4);
-}
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 3 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
-
-const DEFAULT_BRAND_VOICE = `CatalystAI — AI consultant helping small businesses leverage technology for real results. Professional, warm, accessible tone. Focus on business outcomes, not technical jargon.`;
-
-async function loadBrandVoice(b44: any): Promise<string> {
-  try {
-    const list = await b44.entities.BrandVoice.list();
-    const bv = list[0];
-    if (!bv?.identity) return DEFAULT_BRAND_VOICE;
-
-    const tone = (bv.tone_attributes || []).join(", ");
-    return [
-      bv.identity,
-      bv.audience ? `Audience: ${bv.audience}` : "",
-      tone ? `Tone: ${tone}` : "",
-    ].filter(Boolean).join("\n");
-  } catch {
-    return DEFAULT_BRAND_VOICE;
-  }
-}
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost } from "../_shared/brandVoicePrompt.ts";
 
 Deno.serve(async (req: Request) => {
   try {
@@ -65,7 +40,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Load brand voice
-    const brandVoice = await loadBrandVoice(b44);
+    const bv = await loadBrandVoiceData(b44);
 
     // Build interaction history context
     const interactionContext = interactions.length > 0
@@ -74,12 +49,11 @@ Deno.serve(async (req: Request) => {
         ).join("\n")
       : "No previous interactions recorded.";
 
-    const lang = language === "he" ? "Hebrew" : "English";
+    const lang = language === "he" ? "he" : "en";
 
-    const prompt = `You are a CRM follow-up assistant. Generate a short, genuine follow-up message for a stale lead.
-
-Brand Context:
-${brandVoice}
+    const prompt = buildContentPrompt(bv, {
+      language: lang,
+      taskInstructions: `You are a CRM follow-up assistant. Generate a short, genuine follow-up message for a stale lead.
 
 Client Context:
 - Name: ${client.name}
@@ -92,7 +66,6 @@ Recent Interaction History:
 ${interactionContext}
 
 Instructions:
-- Write in ${lang}
 - Generate a follow-up message that is under 100 words
 - Be genuine, warm, and professional — NOT salesy or pushy
 - Reference the last interaction naturally if available
@@ -101,7 +74,8 @@ Instructions:
 Return JSON with:
 - "subject": a short email subject line
 - "body": the follow-up message (under 100 words, plain text)
-- "suggestedAction": one of "call", "email", or "whatsapp" — pick the best channel based on the interaction history`;
+- "suggestedAction": one of "call", "email", or "whatsapp" — pick the best channel based on the interaction history`,
+    });
 
     const result = await b44.integrations.Core.InvokeLLM({
       prompt,
