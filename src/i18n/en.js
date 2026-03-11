@@ -459,6 +459,23 @@ export default {
       document: 'Document',
       actionItems: 'Action items',
     },
+    actions: {
+      logInteraction: 'Log Interaction',
+      generateProposal: 'Generate Proposal',
+      viewProposal: 'View Proposal',
+      closeDeal: 'Close Deal',
+      createProject: 'Create Business Project',
+      goToProject: 'Go to Project',
+      generating: 'Generating proposal...',
+      positiveSignal: 'Positive signal detected — ready for proposal?',
+      createProjectTitle: 'Create Business Project',
+      projectName: 'Project Name',
+      projectType: 'Project Type',
+      consulting: 'Consulting',
+      development: 'Development',
+      both: 'Both',
+      lostReason: 'Lost Reason',
+    },
   },
 
   // Business Projects

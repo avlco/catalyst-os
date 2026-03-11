@@ -459,6 +459,23 @@ export default {
       document: 'מסמך',
       actionItems: 'פריטי פעולה',
     },
+    actions: {
+      logInteraction: 'תעד אינטראקציה',
+      generateProposal: 'צור הצעת מחיר',
+      viewProposal: 'צפה בהצעה',
+      closeDeal: 'סגור עסקה',
+      createProject: 'צור פרויקט עסקי',
+      goToProject: 'עבור לפרויקט',
+      generating: 'מייצר הצעת מחיר...',
+      positiveSignal: 'זוהה סיגנל חיובי — מוכן להצעת מחיר?',
+      createProjectTitle: 'יצירת פרויקט עסקי',
+      projectName: 'שם הפרויקט',
+      projectType: 'סוג הפרויקט',
+      consulting: 'ייעוץ',
+      development: 'פיתוח',
+      both: 'שניהם',
+      lostReason: 'סיבת הפסד',
+    },
   },
 
   // Business Projects
