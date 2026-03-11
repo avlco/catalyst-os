@@ -1,0 +1,5 @@
+{
+  "name": "generate-follow-up-draft",
+  "description": "Generate AI follow-up message draft for stale leads",
+  "type": "invoke"
+}

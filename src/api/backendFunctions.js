@@ -24,4 +24,5 @@ export const backendFunctions = {
   discoveryEngine: (data) => invoke('discovery-engine', data),
   scanExternalTrends: (data) => invoke('scan-external-trends', data || {}),
   strategicBrain: (data) => invoke('strategic-brain', data || {}),
+  generateFollowUpDraft: (data) => invoke('generate-follow-up-draft', data),
 };
