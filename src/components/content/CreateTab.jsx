@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { backendFunctions } from '@/api/backendFunctions';
@@ -21,6 +22,7 @@ export default function CreateTab() {
   const [platforms, setPlatforms] = useState(['linkedin_personal', 'facebook_business']);
   const [tone, setTone] = useState('professional');
   const [language, setLanguage] = useState('en');
+  const [campaign, setCampaign] = useState('');
 
   const togglePlatform = (p) => {
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -39,6 +41,7 @@ export default function CreateTab() {
         body: body.trim().slice(0, 2000),
         processed: false,
         suggested_platforms: platforms,
+        campaign: campaign.trim() || undefined,
       });
 
       // 2. Call backend function to generate content
@@ -118,6 +121,11 @@ export default function CreateTab() {
                 <option value="both">{t('common.languages.both')}</option>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <label className="text-body-m font-medium block mb-1.5">{t('content.create.campaign')}</label>
+            <Input value={campaign} onChange={e => setCampaign(e.target.value)} placeholder={t('content.create.campaignPlaceholder')} />
           </div>
 
           <Button onClick={handleGenerate} disabled={!body.trim() || generating}>

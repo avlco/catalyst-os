@@ -338,6 +338,8 @@ export default {
     newClient: 'New Client',
     noClients: 'No leads yet.',
     noClientsSub: 'Add your first client.',
+    sourceCampaign: 'Source Campaign',
+    sourceCampaignPlaceholder: 'Which campaign brought this lead?',
     form: {
       name: 'Name *',
       company: 'Company',
@@ -626,6 +628,8 @@ export default {
       platformsFailed: 'platform(s) failed.',
       contentGenerated: 'Content generated! Check the Pipeline tab.',
       generationFailed: 'Generation failed',
+      campaign: 'Campaign',
+      campaignPlaceholder: 'Campaign name (auto-generated if empty)',
     },
     pipeline: {
       approved: 'Content approved',

@@ -338,6 +338,8 @@ export default {
     newClient: 'לקוח חדש',
     noClients: 'אין לידים עדיין.',
     noClientsSub: 'הוסף את הלקוח הראשון שלך.',
+    sourceCampaign: 'קמפיין מקור',
+    sourceCampaignPlaceholder: 'איזה קמפיין הביא את הליד?',
     form: {
       name: 'שם *',
       company: 'חברה',
@@ -626,6 +628,8 @@ export default {
       platformsFailed: 'פלטפורמות נכשלו.',
       contentGenerated: 'תוכן נוצר! בדוק בלשונית Pipeline.',
       generationFailed: 'יצירה נכשלה',
+      campaign: 'קמפיין',
+      campaignPlaceholder: 'שם קמפיין (ייווצר אוטומטית אם ריק)',
     },
     pipeline: {
       approved: 'תוכן אושר',

@@ -36,7 +36,7 @@ function NewClientDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const createClient = clientHooks.useCreate();
   const { data: existingClients = [] } = clientHooks.useList();
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', source: 'linkedin' });
+  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', source: 'linkedin', source_campaign: '' });
   const [dupWarning, setDupWarning] = useState(null);
 
   const checkDuplicate = (email) => {
@@ -47,10 +47,11 @@ function NewClientDialog({ open, onOpenChange }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createClient.mutateAsync({ ...form, pipeline_stage: 'lead', lead_score: 50 });
+      const { source_campaign, ...rest } = form;
+      await createClient.mutateAsync({ ...rest, ...(source_campaign.trim() ? { source_campaign: source_campaign.trim() } : {}), pipeline_stage: 'lead', lead_score: 50 });
       toast.success(t('clients.form.clientCreated'));
       onOpenChange(false);
-      setForm({ name: '', company: '', email: '', phone: '', source: 'linkedin' });
+      setForm({ name: '', company: '', email: '', phone: '', source: 'linkedin', source_campaign: '' });
     } catch (err) {
       toast.error(err.message);
     }
@@ -94,6 +95,10 @@ function NewClientDialog({ open, onOpenChange }) {
                 )}
               </Select>
             </div>
+          </div>
+          <div>
+            <label className="text-body-m font-medium block mb-1.5">{t('clients.sourceCampaign')}</label>
+            <Input value={form.source_campaign} onChange={e => setForm(f => ({...f, source_campaign: e.target.value}))} placeholder={t('clients.sourceCampaignPlaceholder')} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
