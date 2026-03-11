@@ -25,4 +25,5 @@ export const backendFunctions = {
   scanExternalTrends: (data) => invoke('scan-external-trends', data || {}),
   strategicBrain: (data) => invoke('strategic-brain', data || {}),
   generateFollowUpDraft: (data) => invoke('generate-follow-up-draft', data),
+  inlineEditContent: (data) => invoke('inline-edit-content', data),
 };
