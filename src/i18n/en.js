@@ -798,6 +798,12 @@ export default {
       blog: 'Blog',
       newsletter: 'Newsletter',
     },
+    inlineEdit: {
+      shorten: 'Shorten',
+      addExample: 'Add example',
+      changeTone: 'Change tone',
+      translate: 'Translate',
+    },
   },
 
   // Analytics

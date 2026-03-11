@@ -798,6 +798,12 @@ export default {
       blog: 'בלוג',
       newsletter: 'ניוזלטר',
     },
+    inlineEdit: {
+      shorten: 'קצר',
+      addExample: 'הוסף דוגמה',
+      changeTone: 'שנה טון',
+      translate: 'תרגם',
+    },
   },
 
   // Analytics
