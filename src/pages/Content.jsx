@@ -4,6 +4,7 @@ import { contentItemHooks } from '@/api/hooks';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
+import ContentWorkspace from '@/components/content/ContentWorkspace';
 import InboxTab from '@/components/content/InboxTab';
 import CalendarTab from '@/components/content/CalendarTab';
 import PipelineTab from '@/components/content/PipelineTab';
@@ -13,7 +14,7 @@ import CreateTab from '@/components/content/CreateTab';
 
 export default function Content() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [activeTab, setActiveTab] = useState('workspace');
   const { data: contentItems = [], isError, refetch } = contentItemHooks.useList();
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function Content() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
+          <TabsTrigger value="workspace">{t('content.tabs.workspace')}</TabsTrigger>
           <TabsTrigger value="inbox">{t('content.tabs.inbox')}</TabsTrigger>
           <TabsTrigger value="calendar">{t('content.tabs.calendar')}</TabsTrigger>
           <TabsTrigger value="pipeline">{t('content.tabs.pipeline')}</TabsTrigger>
@@ -47,6 +49,7 @@ export default function Content() {
           <TabsTrigger value="create">{t('content.tabs.create')}</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="workspace"><ContentWorkspace /></TabsContent>
         <TabsContent value="inbox"><InboxTab /></TabsContent>
         <TabsContent value="calendar"><CalendarTab contentItems={contentItems} /></TabsContent>
         <TabsContent value="pipeline"><PipelineTab /></TabsContent>
