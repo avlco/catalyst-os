@@ -1,27 +1,17 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n';
-import { contentItemHooks } from '@/api/hooks';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { useContentWorkspaceStore } from '@/stores/contentWorkspaceStore';
+import PlannerView from '@/components/content/PlannerView';
+import SocialDeskDrawer from '@/components/content/SocialDeskDrawer';
+import ZenEditor from '@/components/content/ZenEditor';
+import NewsletterAssembler from '@/components/content/NewsletterAssembler';
 import { AlertTriangle } from 'lucide-react';
-import ContentWorkspace from '@/components/content/ContentWorkspace';
-import InboxTab from '@/components/content/InboxTab';
-import CalendarTab from '@/components/content/CalendarTab';
-import PipelineTab from '@/components/content/PipelineTab';
-import BlogTab from '@/components/content/BlogTab';
-import NewsletterTab from '@/components/content/NewsletterTab';
-import CreateTab from '@/components/content/CreateTab';
+import { Button } from '@/components/ui/button';
+import { contentItemHooks } from '@/api/hooks';
 
 export default function Content() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('workspace');
-  const { data: contentItems = [], isError, refetch } = contentItemHooks.useList();
-
-  useEffect(() => {
-    const handler = () => setActiveTab('create');
-    document.addEventListener('shortcut-new', handler);
-    return () => document.removeEventListener('shortcut-new', handler);
-  }, []);
+  const { activeOverlay, overlayPayload, closeOverlay } = useContentWorkspaceStore();
+  const { isError, refetch } = contentItemHooks.useList();
 
   if (isError) {
     return (
@@ -38,25 +28,30 @@ export default function Content() {
     <div>
       <h1 className="text-h1 mb-6">{t('content.title')}</h1>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="workspace">{t('content.tabs.workspace')}</TabsTrigger>
-          <TabsTrigger value="inbox">{t('content.tabs.inbox')}</TabsTrigger>
-          <TabsTrigger value="calendar">{t('content.tabs.calendar')}</TabsTrigger>
-          <TabsTrigger value="pipeline">{t('content.tabs.pipeline')}</TabsTrigger>
-          <TabsTrigger value="blog">{t('content.tabs.blog')}</TabsTrigger>
-          <TabsTrigger value="newsletter">{t('content.tabs.newsletter')}</TabsTrigger>
-          <TabsTrigger value="create">{t('content.tabs.create')}</TabsTrigger>
-        </TabsList>
+      {/* Hub: Always render PlannerView */}
+      <PlannerView />
 
-        <TabsContent value="workspace"><ContentWorkspace /></TabsContent>
-        <TabsContent value="inbox"><InboxTab /></TabsContent>
-        <TabsContent value="calendar"><CalendarTab contentItems={contentItems} /></TabsContent>
-        <TabsContent value="pipeline"><PipelineTab /></TabsContent>
-        <TabsContent value="blog"><BlogTab /></TabsContent>
-        <TabsContent value="newsletter"><NewsletterTab /></TabsContent>
-        <TabsContent value="create"><CreateTab /></TabsContent>
-      </Tabs>
+      {/* Contextual overlays */}
+      {activeOverlay === 'socialDesk' && (
+        <SocialDeskDrawer
+          payload={overlayPayload}
+          onClose={closeOverlay}
+        />
+      )}
+
+      {activeOverlay === 'zenEditor' && (
+        <ZenEditor
+          payload={overlayPayload}
+          onClose={closeOverlay}
+        />
+      )}
+
+      {activeOverlay === 'newsletterAssembler' && (
+        <NewsletterAssembler
+          payload={overlayPayload}
+          onClose={closeOverlay}
+        />
+      )}
     </div>
   );
 }
