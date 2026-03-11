@@ -424,16 +424,64 @@ Write the complete post text ready for review. The title is provided separately 
     }
 
     // ---------------------------------------------------------------
-    // Notification — includes draft count
+    // Phase 3: Create newsletter skeleton for week 1
+    // ---------------------------------------------------------------
+    let newsletterId: string | null = null;
+    try {
+      const weekOfStr = nextMonday.toISOString().split("T")[0];
+
+      // Check if newsletter already exists for this week
+      const allNewsletters = await b44.entities.Newsletter.list();
+      const existingNl = allNewsletters.find((n: any) => n.week_of === weekOfStr);
+
+      if (!existingNl) {
+        const issueNumber = allNewsletters.length + 1;
+
+        // Build skeleton blocks from created drafts
+        const blogDraft = week1Angles.find((a: any) => a.platform === "blog");
+        const skeletonBlocks = [
+          { id: `block-skel-0`, type: "opening", title: "Opening", body: "<p>[ Write your personal opening ]</p>" },
+          ...(blogDraft
+            ? [{ id: `block-skel-1`, type: "blog_teaser", title: blogDraft.title || "Blog Teaser", body: `<p>${blogDraft.direction || "[ Blog teaser — edit after writing the blog ]"}</p>` }]
+            : []),
+          { id: `block-skel-2`, type: "insight", title: "Weekly Insight", body: "<p>[ Share a consulting insight ]</p>" },
+          { id: `block-skel-3`, type: "cta", title: "Call to Action", body: "<p>[ Add your call to action ]</p>" },
+        ];
+
+        const newsletter = await b44.entities.Newsletter.create({
+          issue_number: issueNumber,
+          week_of: weekOfStr,
+          status: "draft",
+          subject_en: `CatalystAI Weekly #${issueNumber}`,
+          subject_he: `CatalystAI שבועי #${issueNumber}`,
+          blocks_en: skeletonBlocks,
+          blocks_he: skeletonBlocks.map((b: any) => ({ ...b, id: b.id.replace("skel", "skel-he") })),
+          body_en: "",
+          body_he: "",
+        });
+        newsletterId = newsletter.id;
+      }
+    } catch (err) {
+      console.error("Failed to create newsletter skeleton:", (err as Error).message);
+    }
+
+    // ---------------------------------------------------------------
+    // Notification — includes draft count + newsletter
     // ---------------------------------------------------------------
     const totalAngles = parsed.weeks.reduce((sum: number, w: any) => sum + (w.angles?.length || 0), 0);
-    const draftsCreated = draftIds.length;
+    const postCount = draftIds.filter((_: string, i: number) => {
+      const angle = week1Angles[i];
+      return angle && angle.platform !== "blog";
+    }).length;
+    const blogCount = draftIds.length - postCount;
+    const nlText = newsletterId ? " + 1 newsletter" : "";
+    const nlTextHe = newsletterId ? " + 1 ניוזלטר" : "";
 
     await b44.entities.Notification.create({
       type: "content_plan",
-      title: `Your week is ready: ${draftsCreated} drafts`,
-      title_en: `Your week is ready: ${draftsCreated} posts + content plan`,
-      title_he: `השבוע שלך מוכן: ${draftsCreated} טיוטות + תוכנית תוכן`,
+      title: `Your week is ready: ${postCount} posts${blogCount ? ` + ${blogCount} blog` : ""}${nlText}`,
+      title_en: `Your week is ready: ${postCount} posts${blogCount ? ` + ${blogCount} blog` : ""}${nlText}`,
+      title_he: `השבוע שלך מוכן: ${postCount} פוסטים${blogCount ? ` + ${blogCount} בלוג` : ""}${nlTextHe}`,
       body_en: `Growth phase: ${growthPhase}. ${totalAngles} angles across 4 weeks. ${parsed.key_insight || ""}`,
       body_he: `שלב צמיחה: ${growthPhase === "establish" ? "ביסוס" : growthPhase === "demonstrate" ? "הדגמה" : "משיכה"}. ${totalAngles} זוויות ב-4 שבועות. ${parsed.key_insight || ""}`,
       priority: "high",
@@ -449,6 +497,7 @@ Write the complete post text ready for review. The title is provided separately 
       keyInsight: parsed.key_insight,
       draftsCreated: draftIds.length,
       draftIds,
+      newsletterId,
     });
   } catch (error) {
     return Response.json({ error: (error as Error).message }, { status: 500 });

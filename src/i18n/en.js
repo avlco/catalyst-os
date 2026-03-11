@@ -615,12 +615,8 @@ export default {
     title: 'Content',
     tabs: {
       workspace: 'Workspace',
-      inbox: 'Inbox',
-      create: 'Create',
-      pipeline: 'Pipeline',
       blog: 'Blog',
       newsletter: 'Newsletter',
-      calendar: 'Calendar',
     },
     workspace: {
       title: 'Content Workspace',
@@ -872,6 +868,10 @@ export default {
       deleteDraft: 'Delete Draft',
       approveClose: 'Approve & Close',
       wordCount: 'words',
+      publishToWebsite: 'Publish to Website',
+      published: 'Published to website successfully',
+      publishFailed: 'Failed to publish to website',
+      saveFirst: 'Save the draft first before publishing',
     },
     assembler: {
       title: 'Newsletter Assembler',

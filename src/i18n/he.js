@@ -615,12 +615,8 @@ export default {
     title: 'תוכן',
     tabs: {
       workspace: 'סדנה',
-      inbox: 'תיבת דואר',
-      create: 'יצירה',
-      pipeline: 'צינור',
       blog: 'בלוג',
       newsletter: 'ניוזלטר',
-      calendar: 'לוח שנה',
     },
     workspace: {
       title: 'סדנת תוכן',
@@ -872,6 +868,10 @@ export default {
       deleteDraft: 'מחק טיוטה',
       approveClose: 'אשר וסגור',
       wordCount: 'מילים',
+      publishToWebsite: 'פרסם לאתר',
+      published: 'פורסם לאתר בהצלחה',
+      publishFailed: 'הפרסום לאתר נכשל',
+      saveFirst: 'שמור את הטיוטה לפני פרסום',
     },
     assembler: {
       title: 'בונה ניוזלטר',

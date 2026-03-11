@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Trash2,
   Loader2,
+  Upload,
   X,
 } from 'lucide-react';
 
@@ -62,6 +63,7 @@ export default function ZenEditor({ payload, onClose }) {
   const [category, setCategory] = useState(contentItem?.category || '');
   const [lang, setLang] = useState(contentItem?.language || language || 'en');
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [generating, setGenerating] = useState(!isEditMode);
   const [contentItemId, setContentItemId] = useState(contentItem?.id || null);
 
@@ -255,6 +257,23 @@ export default function ZenEditor({ payload, onClose }) {
     }
   };
 
+  // Publish to website
+  const handlePublish = async () => {
+    if (!contentItemId) {
+      toast.error(t('content.zenEditor.saveFirst'));
+      return;
+    }
+    setPublishing(true);
+    try {
+      await backendFunctions.publishBlogToWebsite({ content_item_id: contentItemId });
+      toast.success(t('content.zenEditor.published'));
+    } catch (err) {
+      toast.error(err?.message || t('content.zenEditor.publishFailed'));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   // Word count
   const wordCount = editor?.storage.characterCount.words() ?? 0;
 
@@ -407,6 +426,21 @@ export default function ZenEditor({ payload, onClose }) {
                 <option value="he">Hebrew</option>
               </select>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePublish}
+              disabled={publishing || !contentItemId}
+              className="w-full gap-1.5 mt-2"
+            >
+              {publishing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {t('content.zenEditor.publishToWebsite')}
+            </Button>
           </div>
         </aside>
       </div>
