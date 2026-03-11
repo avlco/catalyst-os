@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Settings, Github, Globe, Shield, BarChart, Users, Plus, LogOut, Upload, Download, Trash2, Pencil, FileText, Sparkles, X, Mic, Loader2, Eye } from 'lucide-react';
+import { Settings, Github, Globe, Shield, BarChart, Users, Plus, LogOut, Upload, Download, Trash2, Pencil, FileText, Sparkles, X, Mic, Loader2, Eye, Linkedin } from 'lucide-react';
 import { backendFunctions } from '@/api/backendFunctions';
 
 // ════════════════════════════════════════════════════════════════════
@@ -90,6 +90,108 @@ function IntegrationsTab() {
     }
   };
 
+  // LinkedIn state
+  const [liTesting, setLiTesting] = useState(false);
+  const [liConnected, setLiConnected] = useState(false);
+  const [liProfile, setLiProfile] = useState({ name: '', avatarUrl: '', personUrn: '' });
+  const [liOrgs, setLiOrgs] = useState([]);
+  const [liSelectedOrg, setLiSelectedOrg] = useState('');
+
+  // Initialize LinkedIn state from settings
+  useEffect(() => {
+    if (settings?.linkedin_connected) {
+      setLiConnected(true);
+      setLiProfile({
+        name: settings.linkedin_display_name || '',
+        avatarUrl: settings.linkedin_avatar_url || '',
+        personUrn: settings.linkedin_person_urn || '',
+      });
+      setLiSelectedOrg(settings.linkedin_company_id || '');
+    }
+  }, [settings]);
+
+  const persistLinkedInConnection = async (value, profile = {}, companyId = '', companyName = '') => {
+    const data = {
+      linkedin_connected: value,
+      ...(value ? {
+        linkedin_person_urn: profile.personUrn || '',
+        linkedin_display_name: profile.name || '',
+        linkedin_avatar_url: profile.avatarUrl || '',
+        linkedin_company_id: companyId,
+        linkedin_company_name: companyName,
+      } : {
+        linkedin_person_urn: '',
+        linkedin_display_name: '',
+        linkedin_avatar_url: '',
+        linkedin_company_id: '',
+        linkedin_company_name: '',
+      }),
+    };
+    try {
+      if (settings) {
+        await updateSettings.mutateAsync({ id: settings.id, data });
+      } else {
+        await createSettings.mutateAsync(data);
+      }
+    } catch { /* silent */ }
+  };
+
+  const handleTestLinkedIn = async () => {
+    try {
+      setLiTesting(true);
+      const result = await backendFunctions.verifyLinkedInConnection();
+      if (result?.connected) {
+        setLiConnected(true);
+        const profile = {
+          name: result.name,
+          avatarUrl: result.avatarUrl,
+          personUrn: result.personUrn,
+        };
+        setLiProfile(profile);
+        setLiOrgs(result.organizations || []);
+
+        // Auto-select first org if only one exists
+        const autoOrg = result.organizations?.[0];
+        const companyId = autoOrg?.id || '';
+        const companyName = autoOrg?.name || '';
+        if (autoOrg) setLiSelectedOrg(autoOrg.id);
+
+        await persistLinkedInConnection(true, profile, companyId, companyName);
+        toast.success(`LinkedIn connected as ${result.name}`);
+      } else {
+        setLiConnected(false);
+        setLiProfile({ name: '', avatarUrl: '', personUrn: '' });
+        await persistLinkedInConnection(false);
+        toast.error(result?.error || t('settings.integrations.linkedinConnectionFailed'));
+      }
+    } catch (err) {
+      toast.error(`${t('settings.integrations.linkedinConnectionFailed')}: ${err?.message || 'Unknown error'}`);
+      setLiConnected(false);
+      await persistLinkedInConnection(false);
+    } finally {
+      setLiTesting(false);
+    }
+  };
+
+  const handleCompanyPageChange = async (orgId) => {
+    setLiSelectedOrg(orgId);
+    const org = liOrgs.find((o) => o.id === orgId);
+    if (settings) {
+      try {
+        await updateSettings.mutateAsync({
+          id: settings.id,
+          data: {
+            linkedin_company_id: orgId,
+            linkedin_company_name: org?.name || '',
+          },
+        });
+        toast.success(t('common.saved'));
+      } catch {
+        toast.error(t('common.saveFailed'));
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -138,6 +240,90 @@ function IntegrationsTab() {
             )}
             <Button onClick={handleTestConnection} disabled={testing} variant={connected ? 'outline' : 'default'}>
               {testing ? t('settings.integrations.testing') : t('settings.integrations.testConnection')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* LinkedIn Card */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {liConnected && liProfile.avatarUrl ? (
+                <img
+                  src={liProfile.avatarUrl}
+                  alt={liProfile.name}
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Linkedin className="w-5 h-5" />
+                </div>
+              )}
+              <div>
+                {liConnected && liProfile.name ? (
+                  <>
+                    <h3 className="text-body-l font-semibold">{liProfile.name}</h3>
+                    <p className="text-caption text-muted-foreground">LinkedIn</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-body-l font-semibold">{t('settings.integrations.linkedin')}</h3>
+                    <p className="text-caption text-muted-foreground">{t('settings.integrations.linkedinDesc')}</p>
+                  </>
+                )}
+              </div>
+            </div>
+            <Badge variant={liConnected ? 'success' : 'neutral'}>
+              {liConnected ? t('settings.integrations.connected') : t('settings.integrations.notConnected')}
+            </Badge>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {!liConnected && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="text-body-m font-medium mb-2">{t('settings.integrations.linkedinConnectSteps')}</p>
+                <ol className="text-caption text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>{t('settings.integrations.linkedinStep1')} <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">npx base44 connectors push</code></li>
+                  <li>{t('settings.integrations.linkedinStep2')}</li>
+                  <li>{t('settings.integrations.linkedinStep3')}</li>
+                </ol>
+              </div>
+            )}
+
+            {/* Company Page selector — only shown when connected and orgs available */}
+            {liConnected && liOrgs.length > 0 && (
+              <div>
+                <label className="text-caption text-muted-foreground block mb-1">
+                  {t('settings.integrations.companyPage')}
+                </label>
+                <Select
+                  value={liSelectedOrg}
+                  onChange={(e) => handleCompanyPageChange(e.target.value)}
+                  className="w-full max-w-sm"
+                >
+                  <option value="">{t('settings.integrations.selectCompanyPage')}</option>
+                  {liOrgs.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name} {org.vanityName ? `(@${org.vanityName})` : ''}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-caption text-muted-foreground mt-1">
+                  {t('settings.integrations.companyPageDesc')}
+                </p>
+              </div>
+            )}
+
+            {liConnected && liOrgs.length === 0 && (
+              <p className="text-caption text-muted-foreground">
+                {t('settings.integrations.noCompanyPages')}
+              </p>
+            )}
+
+            <Button onClick={handleTestLinkedIn} disabled={liTesting} variant={liConnected ? 'outline' : 'default'}>
+              {liTesting ? t('settings.integrations.testing') : t('settings.integrations.testConnection')}
             </Button>
           </div>
         </CardContent>
