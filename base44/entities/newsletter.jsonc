@@ -10,6 +10,18 @@
     "subject_he": { "type": "string", "maxLength": 100 },
     "body_en": { "type": "string", "description": "English HTML body" },
     "body_he": { "type": "string", "description": "Hebrew HTML body" },
+    "blocks_en": {
+      "type": "array",
+      "items": { "type": "object" },
+      "default": [],
+      "description": "Newsletter content as draggable blocks (EN)"
+    },
+    "blocks_he": {
+      "type": "array",
+      "items": { "type": "object" },
+      "default": [],
+      "description": "Newsletter content as draggable blocks (HE)"
+    },
     "ai_news_items": { "type": "array", "items": { "type": "object" }, "default": [] },
     "blog_content_id": { "type": "string" },
     "recipients_count": { "type": "number", "default": 0 },

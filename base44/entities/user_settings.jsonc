@@ -89,6 +89,16 @@
       "type": "boolean",
       "default": false,
       "description": "Whether the user has completed the onboarding flow"
+    },
+    "last_signal_scan": {
+      "type": "string",
+      "description": "ISO timestamp of last Signal Engine scan"
+    },
+    "default_platforms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["linkedin_personal", "facebook_business"],
+      "description": "Default platforms for content generation"
     }
   },
   "required": ["language", "theme", "default_content_lang", "notify_stale_leads_days", "github_sync_interval_hours", "newsletter_send_day", "ai_cost_alert_threshold_usd"]

@@ -11,7 +11,10 @@
     "title": { "type": "string", "maxLength": 200 },
     "body": { "type": "string", "description": "Full content" },
     "raw_input_id": { "type": "string" },
-    "source_type": { "type": "string", "enum": ["manual", "github", "project_milestone", "client_work"] },
+    "source_type": { "type": "string", "enum": ["manual", "github", "project_milestone", "client_work", "signal"] },
+    "signal_type": { "type": "string", "description": "Signal that triggered this content (client_won, project_active, milestone_completed, project_completed, stale_lead, no_content_week, sector_pattern)" },
+    "signal_ref": { "type": "string", "description": "ID of the entity that triggered the signal" },
+    "content_plan_id": { "type": "string", "description": "ContentPlan that generated this item" },
     "scheduled_date": { "type": "string" },
     "published_date": { "type": "string" },
     "seo_title": { "type": "string", "maxLength": 60 },
@@ -28,7 +31,9 @@
     "clicks": { "type": "number", "default": 0 },
     "linked_content_ids": { "type": "array", "items": { "type": "string" }, "default": [] },
     "ai_generated": { "type": "boolean", "default": true },
-    "approved_by_human": { "type": "boolean", "default": false }
+    "approved_by_human": { "type": "boolean", "default": false },
+    "external_url": { "type": "string", "description": "URL of the published post on the website" },
+    "website_article_id": { "type": "string", "description": "ID of the corresponding Article entity on the website" }
   },
   "required": ["type", "status", "language", "body", "ai_generated", "approved_by_human"]
 }

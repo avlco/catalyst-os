@@ -1,0 +1,50 @@
+// E20 — BrandVoice: Singleton config loaded by all content-generating functions.
+{
+  "name": "BrandVoice",
+  "type": "object",
+  "properties": {
+    "identity": {
+      "type": "string",
+      "description": "Who you are, what you do, your unique value proposition"
+    },
+    "audience": {
+      "type": "string",
+      "description": "Target audience — their pains, needs, and what they seek"
+    },
+    "topics": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Core topics to cover in content"
+    },
+    "tone_attributes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Adjectives describing the desired tone"
+    },
+    "voice_do": {
+      "type": "string",
+      "description": "What to include — insights, analysis, business applications, results"
+    },
+    "voice_dont": {
+      "type": "string",
+      "description": "What to avoid — code, software updates, technical features"
+    },
+    "translation_layer": {
+      "type": "string",
+      "description": "Instructions for converting technical language to business-outcome language for SMB audiences"
+    },
+    "platform_guidelines": {
+      "type": "object",
+      "properties": {
+        "linkedin": { "type": "string" },
+        "facebook": { "type": "string" },
+        "blog": { "type": "string" },
+        "newsletter": { "type": "string" }
+      },
+      "description": "Per-platform content rules (length, structure, style)"
+    }
+  },
+  "required": ["identity", "audience"]
+}
