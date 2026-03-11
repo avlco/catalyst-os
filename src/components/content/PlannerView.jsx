@@ -21,7 +21,6 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon,
   Check,
   CheckCheck,
   Sparkles,
@@ -29,12 +28,22 @@ import {
   Inbox,
   GripVertical,
   Loader2,
+  PenSquare,
+  Mail,
+  Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// --- Draggable parking lot item ---
-function ParkingLotItem({ item, type }) {
-  const { t } = useTranslation();
+// --- Local date helper (avoids UTC timezone shift) ---
+function toLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// --- Draggable + Clickable parking lot item ---
+function ParkingLotItem({ item, type, onClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `parking-${type}-${item.id}`,
     data: { item, type },
@@ -54,19 +63,29 @@ function ParkingLotItem({ item, type }) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="flex items-start gap-2 rounded-md border border-border p-2.5 cursor-grab active:cursor-grabbing hover:bg-muted/50 transition-colors"
+      className="flex items-start gap-2 rounded-md border border-border p-2.5 hover:bg-muted/50 transition-colors group"
     >
-      <span className="text-sm shrink-0 mt-0.5">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-body-m line-clamp-2">{item.title || item.body?.slice(0, 80) || item.ai_summary}</p>
+      <span
+        {...listeners}
+        className="shrink-0 mt-0.5 cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </span>
+      <button
+        onClick={() => onClick?.(item, type)}
+        className="flex-1 min-w-0 text-start"
+      >
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm shrink-0">{icon}</span>
+          <p className="text-body-m line-clamp-2">{item.title || item.body?.slice(0, 80) || item.ai_summary}</p>
+        </div>
         {item.campaign && (
           <Badge variant="neutral" className="mt-1 text-[10px]">{item.campaign}</Badge>
         )}
         {item.signal_type && (
           <Badge variant="info" className="mt-1 text-[10px]">{item.signal_type}</Badge>
         )}
-      </div>
+      </button>
     </div>
   );
 }
@@ -74,7 +93,7 @@ function ParkingLotItem({ item, type }) {
 // --- Droppable calendar day cell ---
 function CalendarDay({ date, items, isToday, isCurrentMonth, onItemClick }) {
   const { t } = useTranslation();
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = toLocalDateStr(date);
   const { isOver, setNodeRef } = useDroppable({ id: `day-${dateStr}`, data: { date: dateStr } });
 
   const maxItems = 3;
@@ -128,6 +147,22 @@ function CalendarDay({ date, items, isToday, isCurrentMonth, onItemClick }) {
   );
 }
 
+// --- Drag overlay preview ---
+function DragPreview({ item, type }) {
+  const icon = type === 'rawInput'
+    ? (item?.input_type === 'github' ? '\u{1F535}' : '\u{1F4DD}')
+    : '\u{1F4A1}';
+
+  return (
+    <div className="rounded-md border border-primary bg-card p-2.5 shadow-lg max-w-[260px] opacity-90">
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm">{icon}</span>
+        <p className="text-body-m line-clamp-2">{item?.title || item?.body?.slice(0, 60) || '...'}</p>
+      </div>
+    </div>
+  );
+}
+
 // --- Main PlannerView ---
 export default function PlannerView() {
   const { t } = useTranslation();
@@ -141,8 +176,9 @@ export default function PlannerView() {
 
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
+  const [viewMode, setViewMode] = useState('week');
   const [approving, setApproving] = useState(false);
+  const [activeDrag, setActiveDrag] = useState(null);
 
   // Parking lot data
   const parkingRawInputs = useMemo(() => rawInputs.filter(r => !r.processed), [rawInputs]);
@@ -168,14 +204,13 @@ export default function PlannerView() {
     if (viewMode === 'month') {
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
-      const startOffset = (firstDay.getDay() + 6) % 7; // Monday = 0
+      const startOffset = (firstDay.getDay() + 6) % 7;
 
       for (let i = -startOffset; i <= lastDay.getDate() + (6 - (lastDay.getDay() + 6) % 7) - 1; i++) {
         const date = new Date(year, month, i + 1);
         days.push(date);
       }
     } else {
-      // Week view: Monday to Sunday
       const day = currentDate.getDay();
       const monday = new Date(currentDate);
       monday.setDate(currentDate.getDate() - ((day + 6) % 7));
@@ -188,11 +223,11 @@ export default function PlannerView() {
     return days;
   }, [currentDate, viewMode]);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = toLocalDateStr(new Date());
 
   // Get items for a specific day
   const getItemsForDay = useCallback((date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateStr(date);
     return calendarItems.filter(item => item.scheduled_date?.startsWith(dateStr));
   }, [calendarItems]);
 
@@ -208,9 +243,21 @@ export default function PlannerView() {
   };
 
   // DnD sensors
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  // Handle content item click -> open appropriate overlay
+  // Handle parking lot item click → open Social Desk directly
+  const handleParkingClick = useCallback((item, type) => {
+    if (type === 'rawInput') {
+      openOverlay('socialDesk', { rawInput: item, mode: 'create' });
+    } else if (type === 'signal') {
+      openOverlay('socialDesk', {
+        rawInput: { id: item.raw_input_id, body: item.body, campaign: item.campaign },
+        mode: 'create',
+      });
+    }
+  }, [openOverlay]);
+
+  // Handle content item click → open appropriate overlay
   const handleItemClick = useCallback((item) => {
     if (item.platform === 'blog' || item.type === 'blog') {
       openOverlay('zenEditor', { contentItem: item });
@@ -221,8 +268,14 @@ export default function PlannerView() {
     }
   }, [openOverlay]);
 
-  // Handle DnD from parking lot to calendar day
+  // DnD handlers
+  const handleDragStart = useCallback((event) => {
+    const { active } = event;
+    setActiveDrag(active.data.current || null);
+  }, []);
+
   const handleDragEnd = useCallback(async (event) => {
+    setActiveDrag(null);
     const { active, over } = event;
     if (!over || !active) return;
 
@@ -230,34 +283,40 @@ export default function PlannerView() {
     if (!overId.startsWith('day-')) return;
 
     const targetDate = overId.replace('day-', '');
-    const { item, type } = active.data.current || {};
-
-    if (type === 'rawInput') {
-      openOverlay('socialDesk', { rawInput: item, targetDate, mode: 'create' });
-    } else if (type === 'signal') {
-      openOverlay('socialDesk', {
-        rawInput: { id: item.raw_input_id, body: item.body, campaign: item.campaign },
-        targetDate,
-        mode: 'create',
-      });
-    }
-  }, [openOverlay]);
-
-  // Handle DnD between calendar days (reschedule)
-  const handleCalendarDragEnd = useCallback(async (event) => {
-    const { active, over } = event;
-    if (!over || !active) return;
-
     const activeId = String(active.id);
-    const overId = String(over.id);
 
-    // Only handle parking lot -> day drops
-    if (activeId.startsWith('parking-') && overId.startsWith('day-')) {
-      handleDragEnd(event);
+    // Parking lot → calendar day
+    if (activeId.startsWith('parking-')) {
+      const { item, type } = active.data.current || {};
+      if (type === 'rawInput') {
+        openOverlay('socialDesk', { rawInput: item, targetDate, mode: 'create' });
+      } else if (type === 'signal') {
+        openOverlay('socialDesk', {
+          rawInput: { id: item.raw_input_id, body: item.body, campaign: item.campaign },
+          targetDate,
+          mode: 'create',
+        });
+      }
+      return;
     }
-  }, [handleDragEnd]);
 
-  // Approve & Schedule All
+    // Calendar item → different day (reschedule)
+    if (activeId.startsWith('cal-')) {
+      const itemId = activeId.replace('cal-', '');
+      try {
+        await updateContentItem.mutateAsync({
+          id: itemId,
+          data: { scheduled_date: targetDate },
+        });
+        refetchContent();
+        toast.success(t('content.planner.rescheduled'));
+      } catch (err) {
+        toast.error(err.message);
+      }
+    }
+  }, [openOverlay, updateContentItem, refetchContent, t]);
+
+  // Approve & Schedule All (parallel)
   const handleApproveAll = async () => {
     if (draftItemsOnCalendar.length === 0) return;
 
@@ -268,13 +327,16 @@ export default function PlannerView() {
 
     setApproving(true);
     try {
-      for (const item of draftItemsOnCalendar) {
-        await updateContentItem.mutateAsync({
-          id: item.id,
-          data: { status: 'approved', approved_by_human: true },
-        });
-      }
-      toast.success(t('content.planner.approvedCount', { count: draftItemsOnCalendar.length }));
+      const results = await Promise.allSettled(
+        draftItemsOnCalendar.map(item =>
+          updateContentItem.mutateAsync({
+            id: item.id,
+            data: { status: 'approved', approved_by_human: true },
+          })
+        )
+      );
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      toast.success(t('content.planner.approvedCount', { count: succeeded }));
       refetchContent();
     } catch (err) {
       toast.error(err.message);
@@ -304,6 +366,15 @@ export default function PlannerView() {
     }
   };
 
+  // Quick actions
+  const handleCreateBlog = () => {
+    openOverlay('zenEditor', { mode: 'create' });
+  };
+
+  const handleOpenNewsletter = () => {
+    openOverlay('newsletterAssembler', {});
+  };
+
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -313,10 +384,18 @@ export default function PlannerView() {
       {/* Content Plan Banner */}
       <ContentPlanCard />
 
-      {/* Header */}
+      {/* Header + Quick Actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-h2 font-semibold">{t('content.planner.title')}</h2>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={handleCreateBlog}>
+            <PenSquare className="w-4 h-4 me-1" />
+            {t('content.planner.writeBlog')}
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleOpenNewsletter}>
+            <Mail className="w-4 h-4 me-1" />
+            {t('content.planner.newsletter')}
+          </Button>
           {draftItemsOnCalendar.length > 0 && (
             <Button onClick={handleApproveAll} disabled={approving}>
               {approving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <CheckCheck className="w-4 h-4 me-1" />}
@@ -326,7 +405,12 @@ export default function PlannerView() {
         </div>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCalendarDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex flex-col md:flex-row gap-4">
           {/* --- PARKING LOT (side panel) --- */}
           <div className="w-full md:w-[280px] shrink-0 space-y-4">
@@ -342,7 +426,7 @@ export default function PlannerView() {
               ) : (
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {parkingRawInputs.map(input => (
-                    <ParkingLotItem key={input.id} item={input} type="rawInput" />
+                    <ParkingLotItem key={input.id} item={input} type="rawInput" onClick={handleParkingClick} />
                   ))}
                 </div>
               )}
@@ -360,7 +444,7 @@ export default function PlannerView() {
               ) : (
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {parkingSignals.map(item => (
-                    <ParkingLotItem key={item.id} item={item} type="signal" />
+                    <ParkingLotItem key={item.id} item={item} type="signal" onClick={handleParkingClick} />
                   ))}
                 </div>
               )}
@@ -424,10 +508,10 @@ export default function PlannerView() {
             <div className={cn('grid grid-cols-7 gap-1', viewMode === 'week' && 'min-h-[200px]')}>
               {calendarDays.map((date) => (
                 <CalendarDay
-                  key={date.toISOString()}
+                  key={toLocalDateStr(date)}
                   date={date}
                   items={getItemsForDay(date)}
-                  isToday={date.toISOString().split('T')[0] === today}
+                  isToday={toLocalDateStr(date) === today}
                   isCurrentMonth={date.getMonth() === currentDate.getMonth()}
                   onItemClick={handleItemClick}
                 />
@@ -437,17 +521,24 @@ export default function PlannerView() {
             {/* Status legend */}
             <div className="flex items-center gap-4 mt-3 text-caption text-muted-foreground">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded border-2 border-dashed border-muted-foreground" /> Draft
+                <span className="w-3 h-3 rounded border-2 border-dashed border-muted-foreground" /> {t('common.statusLabels.draft')}
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded border-2 border-solid border-primary" /> Approved
+                <span className="w-3 h-3 rounded border-2 border-solid border-primary" /> {t('common.statusLabels.approved')}
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded bg-muted-foreground/40" /> Published
+                <span className="w-3 h-3 rounded bg-muted-foreground/40" /> {t('common.statusLabels.published')}
               </span>
             </div>
           </div>
         </div>
+
+        {/* Drag overlay — shows preview while dragging */}
+        <DragOverlay dropAnimation={null}>
+          {activeDrag ? (
+            <DragPreview item={activeDrag.item} type={activeDrag.type} />
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );

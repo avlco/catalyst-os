@@ -859,6 +859,9 @@ export default {
       approveConfirm: 'לאשר {{count}} פריטים לשבוע הזה?',
       approvedCount: '{{count}} פריטים אושרו ותוזמנו',
       dragHint: 'גרור פריטים מהחניה לתזמן אותם',
+      writeBlog: 'כתוב בלוג',
+      newsletter: 'ניוזלטר',
+      rescheduled: 'הפריט תוזמן מחדש',
     },
     zenEditor: {
       backToPlanner: 'חזרה למתכנן',
@@ -1182,6 +1185,7 @@ export default {
     delete: 'מחק',
     edit: 'ערוך',
     create: 'צור',
+    unsavedChanges: 'יש שינויים שלא נשמרו. לסגור בכל זאת?',
     close: 'סגור',
     loading: 'טוען...',
     error: 'משהו השתבש',

@@ -859,6 +859,9 @@ export default {
       approveConfirm: 'Approve {{count}} items for this week?',
       approvedCount: '{{count}} items approved and scheduled',
       dragHint: 'Drag items from the parking lot to schedule them',
+      writeBlog: 'Write Blog',
+      newsletter: 'Newsletter',
+      rescheduled: 'Item rescheduled',
     },
     zenEditor: {
       backToPlanner: 'Back to Planner',
@@ -1182,6 +1185,7 @@ export default {
     delete: 'Delete',
     edit: 'Edit',
     create: 'Create',
+    unsavedChanges: 'You have unsaved changes. Close anyway?',
     close: 'Close',
     loading: 'Loading...',
     error: 'Something went wrong',

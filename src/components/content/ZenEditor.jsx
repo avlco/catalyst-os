@@ -154,21 +154,56 @@ export default function ZenEditor({ payload, onClose }) {
     return () => { cancelled = true; };
   }, [isEditMode, editor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Escape key to close
+  // Track dirty state
+  const [isDirty, setIsDirty] = useState(false);
+  useEffect(() => {
+    if (!editor) return;
+    const handler = () => setIsDirty(true);
+    editor.on('update', handler);
+    return () => editor.off('update', handler);
+  }, [editor]);
+
+  // Safe close with unsaved changes guard
+  const safeClose = useCallback(() => {
+    if (isDirty) {
+      if (!window.confirm(t('common.unsavedChanges') || 'You have unsaved changes. Close anyway?')) return;
+    }
+    onClose();
+  }, [isDirty, onClose, t]);
+
+  // Escape key to close (with guard)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && !generating) {
-        onClose();
+        safeClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, generating]);
+  }, [safeClose, generating]);
 
-  // Get markdown from editor
+  // Get markdown from editor, preserving mermaid blocks
   const getMarkdown = useCallback(() => {
     if (!editor) return '';
-    return editor.storage.markdown.getMarkdown();
+    let md = editor.storage.markdown.getMarkdown();
+
+    // tiptap-markdown doesn't know about our custom mermaidBlock node.
+    // Walk the doc and inject ```mermaid blocks at the right positions.
+    const mermaidBlocks = [];
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === 'mermaidBlock' && node.attrs.code) {
+        mermaidBlocks.push(node.attrs.code);
+      }
+    });
+
+    // If the markdown lost mermaid blocks, append them at the end
+    if (mermaidBlocks.length > 0 && !md.includes('```mermaid')) {
+      for (const code of mermaidBlocks) {
+        md += `\n\n\`\`\`mermaid\n${code}\n\`\`\``;
+      }
+    }
+
+    return md;
   }, [editor]);
 
   // Save draft
@@ -199,6 +234,7 @@ export default function ZenEditor({ payload, onClose }) {
         });
         if (created?.id) setContentItemId(created.id);
       }
+      setIsDirty(false);
       toast.success(t('content.zenEditor.saved'));
     } catch (err) {
       toast.error(t('content.blog.saveFailed'));
@@ -284,7 +320,7 @@ export default function ZenEditor({ payload, onClose }) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={onClose}
+          onClick={safeClose}
           className="gap-1.5"
         >
           <ArrowLeft className="h-4 w-4" />

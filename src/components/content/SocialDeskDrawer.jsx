@@ -92,16 +92,24 @@ export default function SocialDeskDrawer({ payload, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // --- Safe close with unsaved changes guard ---
+  const safeClose = useCallback(() => {
+    if (getDirtyCards().length > 0) {
+      if (!window.confirm(t('common.unsavedChanges') || 'You have unsaved changes. Close anyway?')) return;
+    }
+    onClose();
+  }, [getDirtyCards, onClose, t]);
+
   // --- Escape key handler ---
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape' && !isGenerating && !isSaving) {
-        onClose();
+        safeClose();
       }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [isGenerating, isSaving, onClose]);
+  }, [isGenerating, isSaving, safeClose]);
 
   // --- Generate content ---
   const handleGenerate = useCallback(async () => {
@@ -265,7 +273,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300',
           isOpen ? 'opacity-100' : 'opacity-0'
         )}
-        onClick={!isGenerating && !isSaving ? onClose : undefined}
+        onClick={!isGenerating && !isSaving ? safeClose : undefined}
         aria-hidden="true"
       />
 
@@ -308,7 +316,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={safeClose}
             disabled={isGenerating || isSaving}
           >
             <X className="h-5 w-5" />
@@ -486,7 +494,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
         <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={safeClose}
             disabled={isGenerating || isSaving}
           >
             {t('common.cancel')}
