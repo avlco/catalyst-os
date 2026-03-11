@@ -1,12 +1,12 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { X, RefreshCw, CalendarDays, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, RefreshCw, CalendarDays, Loader2, CheckCircle2, Send, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useContentWorkspaceStore } from '@/stores/contentWorkspaceStore';
 import { backendFunctions } from '@/api/backendFunctions';
-import { rawInputHooks, contentItemHooks } from '@/api/hooks';
+import { rawInputHooks, contentItemHooks, userSettingsHooks } from '@/api/hooks';
 import WorkspaceContentCard from '@/components/content/WorkspaceContentCard';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
@@ -49,6 +49,14 @@ export default function SocialDeskDrawer({ payload, onClose }) {
   const [tone, setTone] = useState(contentItem?.tone || 'professional');
   const [contentType, setContentType] = useState('shortPost');
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('10:00');
+
+  // Check LinkedIn connection for enabling publish buttons
+  const { data: settingsList = [] } = userSettingsHooks.useList();
+  const linkedinConnected = settingsList[0]?.linkedin_connected || false;
 
   // Track whether we already fired auto-generate
   const didAutoGenerate = useRef(false);
@@ -255,6 +263,116 @@ export default function SocialDeskDrawer({ payload, onClose }) {
       setIsSaving(false);
     }
   }, [getDirtyCards, updateContentItem, updateRawInput, isCreateMode, rawInput?.id, targetDate, t, onClose]);
+
+  // --- Publish Now (LinkedIn) ---
+  const handlePublishNow = useCallback(async () => {
+    if (!linkedinConnected) {
+      toast.error(t('content.socialDesk.linkedinNotConnected'));
+      return;
+    }
+
+    const dirtyCards = getDirtyCards();
+    const linkedinCards = draftCards.filter(
+      (c) => c.platform === 'linkedin_personal' || c.platform === 'linkedin_business'
+    );
+
+    if (linkedinCards.length === 0) {
+      toast.error(t('content.socialDesk.publishFailed'));
+      return;
+    }
+
+    if (!window.confirm(t('content.socialDesk.publishNowConfirm'))) return;
+
+    try {
+      setIsPublishing(true);
+
+      // First save any dirty cards
+      if (dirtyCards.length > 0) {
+        await Promise.all(
+          dirtyCards.map((card) =>
+            updateContentItem.mutateAsync({
+              id: card.id,
+              data: {
+                title: card.localTitle,
+                body: card.localBody,
+                approved_by_human: true,
+              },
+            })
+          )
+        );
+      }
+
+      // Publish each LinkedIn card
+      const results = await Promise.allSettled(
+        linkedinCards.map((card) =>
+          backendFunctions.publishToLinkedIn({ contentItemId: card.id })
+        )
+      );
+
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+
+      if (succeeded > 0) {
+        toast.success(`${succeeded} ${t('content.socialDesk.publishSuccess')}`);
+      }
+      if (failed > 0) {
+        toast.error(`${failed} ${t('content.socialDesk.publishFailed')}`);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['ContentItem'] });
+      onClose();
+    } catch (err) {
+      toast.error(t('content.socialDesk.publishFailed'));
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [linkedinConnected, draftCards, getDirtyCards, updateContentItem, queryClient, t, onClose]);
+
+  // --- Schedule posts ---
+  const handleSchedule = useCallback(async () => {
+    if (!scheduleDate) {
+      toast.error(t('content.socialDesk.scheduledDate'));
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const cards = draftCards.length > 0 ? draftCards : [];
+      await Promise.all(
+        cards.map((card) =>
+          updateContentItem.mutateAsync({
+            id: card.id,
+            data: {
+              title: card.localTitle || card.title,
+              body: card.localBody || card.body,
+              status: 'scheduled',
+              approved_by_human: true,
+              scheduled_date: scheduleDate,
+              scheduled_time: scheduleTime,
+            },
+          })
+        )
+      );
+
+      // Mark rawInput as processed
+      if (isCreateMode && rawInput?.id) {
+        await updateRawInput.mutateAsync({
+          id: rawInput.id,
+          data: { processed: true },
+        });
+      }
+
+      toast.success(t('content.socialDesk.scheduledSuccess'));
+      await queryClient.invalidateQueries({ queryKey: ['ContentItem'] });
+      onClose();
+    } catch (err) {
+      toast.error(t('content.socialDesk.publishFailed'));
+    } finally {
+      setIsSaving(false);
+      setShowScheduler(false);
+    }
+  }, [scheduleDate, scheduleTime, draftCards, updateContentItem, isCreateMode, rawInput, updateRawInput, queryClient, t, onClose]);
 
   // Source text for the panel
   const sourceText = isCreateMode
@@ -491,31 +609,99 @@ export default function SocialDeskDrawer({ payload, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
-          <Button
-            variant="outline"
-            onClick={safeClose}
-            disabled={isGenerating || isSaving}
-          >
-            {t('common.cancel')}
-          </Button>
+        <div className="border-t border-border px-6 py-4 space-y-3">
+          {/* Schedule picker row — shown when showScheduler is true */}
+          {showScheduler && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center gap-2 flex-1">
+                <label className="text-caption text-muted-foreground whitespace-nowrap">
+                  {t('content.socialDesk.scheduledDate')}
+                </label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-body-m"
+                />
+                <label className="text-caption text-muted-foreground whitespace-nowrap">
+                  {t('content.socialDesk.scheduledTime')}
+                </label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-body-m"
+                />
+              </div>
+              <Button size="sm" onClick={handleSchedule} disabled={isSaving || !scheduleDate}>
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.confirm')}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowScheduler(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
-          <Button
-            onClick={handleApproveClose}
-            disabled={isGenerating || isSaving || draftCards.length === 0}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                {t('content.socialDesk.saving')}
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4 me-2" />
-                {t('content.socialDesk.approveClose')}
-              </>
+          {/* Action buttons row */}
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={safeClose}
+              disabled={isGenerating || isSaving || isPublishing}
+            >
+              {t('common.cancel')}
+            </Button>
+
+            {/* Schedule button */}
+            <Button
+              variant="outline"
+              onClick={() => setShowScheduler(!showScheduler)}
+              disabled={isGenerating || isSaving || isPublishing || draftCards.length === 0}
+            >
+              <Clock className="h-4 w-4 me-2" />
+              {t('content.socialDesk.schedule')}
+            </Button>
+
+            {/* Approve & Close (save as draft) */}
+            <Button
+              variant="outline"
+              onClick={handleApproveClose}
+              disabled={isGenerating || isSaving || isPublishing || draftCards.length === 0}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                  {t('content.socialDesk.saving')}
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 me-2" />
+                  {t('content.socialDesk.approveClose')}
+                </>
+              )}
+            </Button>
+
+            {/* Publish Now (LinkedIn only) */}
+            {draftCards.some((c) => c.platform === 'linkedin_personal' || c.platform === 'linkedin_business') && (
+              <Button
+                onClick={handlePublishNow}
+                disabled={isGenerating || isSaving || isPublishing || draftCards.length === 0}
+              >
+                {isPublishing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                    {t('content.socialDesk.publishing')}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 me-2" />
+                    {t('content.socialDesk.publishNow')}
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </>
