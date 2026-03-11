@@ -157,13 +157,26 @@ export default function SocialDeskDrawer({ payload, onClose }) {
         tone: card.tone || tone,
         language: card.language || language,
       });
+
+      // Invalidate cache and refresh the specific card
+      await queryClient.invalidateQueries({ queryKey: ['ContentItem'] });
+      const freshItems = queryClient.getQueryData(['ContentItem']) || [];
+      const refreshed = freshItems.find((item) => item.id === card.id);
+      if (refreshed) {
+        updateCard(card.id, {
+          localTitle: refreshed.title,
+          localBody: refreshed.body,
+          isDirty: false,
+        });
+      }
+
       toast.success(t('content.pipeline.regenerated'));
     } catch (err) {
       toast.error(t('content.pipeline.regenerationFailed'));
     } finally {
       setCardGenerating(card.id, false);
     }
-  }, [rawInput?.id, tone, language, setCardGenerating, t]);
+  }, [rawInput?.id, tone, language, setCardGenerating, updateCard, queryClient, t]);
 
   // --- Change tone for a card ---
   const handleCardToneChange = useCallback((cardId, newTone) => {

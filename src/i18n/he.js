@@ -842,6 +842,21 @@ export default {
       changeTone: 'שנה טון',
       translate: 'תרגם',
     },
+    socialDesk: {
+      title: 'שולחן סושיאל',
+      contentType: 'סוג תוכן',
+      contentTypes: {
+        shortPost: 'פוסט קצר',
+        blogPost: 'פוסט בלוג',
+        newsletterItem: 'פריט ניוזלטר',
+      },
+      approveClose: 'אשר וסגור',
+      regenerate: 'צור מחדש',
+      scheduledFor: 'מתוזמן ל',
+      saving: 'שומר...',
+      saved: 'התוכן אושר ונשמר',
+      saveFailed: 'שמירת התוכן נכשלה',
+    },
   },
 
   // Analytics
