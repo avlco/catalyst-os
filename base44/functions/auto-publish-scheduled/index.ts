@@ -14,20 +14,25 @@ Deno.serve(async (req: Request) => {
       return Response.json({ success: true, published: 0, message: "No scheduled items" });
     }
 
-    const now = new Date();
+    // Compare scheduled date/time in Israel timezone (user's timezone)
+    // sv-SE locale produces ISO-like format: "2026-03-11 10:30:00"
+    const nowIsrael = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Jerusalem" });
+    const [nowDate, nowTimeFull] = nowIsrael.split(" ");
+    const nowTime = nowTimeFull.slice(0, 5); // "HH:MM"
+    const nowStr = `${nowDate} ${nowTime}`;
+
     const results: Array<{ id: string; status: string; error?: string }> = [];
 
     for (const item of scheduled) {
       // Check if it's time to publish
       if (!item.scheduled_date) continue;
 
-      // Build the target datetime from date + time
       const dateStr = item.scheduled_date; // "YYYY-MM-DD"
       const timeStr = item.scheduled_time || "00:00"; // "HH:MM"
-      const targetDate = new Date(`${dateStr}T${timeStr}:00`);
+      const targetStr = `${dateStr} ${timeStr}`;
 
-      if (isNaN(targetDate.getTime()) || targetDate > now) {
-        // Not yet due or invalid date
+      if (targetStr > nowStr) {
+        // Not yet due
         continue;
       }
 

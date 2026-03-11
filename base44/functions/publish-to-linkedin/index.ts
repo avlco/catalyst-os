@@ -16,6 +16,17 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: "Content item not found" }, { status: 404 });
     }
 
+    // Guard: skip if already published (prevents duplicate publishing)
+    if (item.status === "published") {
+      return Response.json({
+        success: true,
+        message: "Already published",
+        postUrn: "",
+        externalUrl: item.external_url || "",
+        platform: item.platform,
+      });
+    }
+
     const platform = item.platform;
     if (platform !== "linkedin_personal" && platform !== "linkedin_business") {
       return Response.json(
