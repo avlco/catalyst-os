@@ -1,0 +1,15 @@
+{
+  "name": "auto-publish-scheduled",
+  "entry": "index.ts",
+  "automations": [
+    {
+      "name": "Auto Publish Scheduled Content",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "simple",
+      "repeat_unit": "minutes",
+      "repeat_interval": 15,
+      "description": "Check for scheduled content items due for publishing every 15 minutes"
+    }
+  ]
+}
