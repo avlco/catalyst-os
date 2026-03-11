@@ -1,0 +1,4 @@
+{
+  "name": "publish-to-linkedin",
+  "entry": "index.ts"
+}
