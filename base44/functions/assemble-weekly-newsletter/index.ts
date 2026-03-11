@@ -76,21 +76,23 @@ Deno.serve(async (req) => {
       ? `This week's blog post: "${weekBlog.title}" — ${(weekBlog.body || "").slice(0, 500)}`
       : "No blog published this week.";
 
-    // Generate newsletter content with AI
+    // Generate newsletter content as JSON blocks for drag-and-drop assembly
     const startTime = Date.now();
 
-    const generateForLang = async (lang: "en" | "he") => {
+    const generateBlocksForLang = async (lang: "en" | "he") => {
       const prompt = buildContentPrompt(bv, {
         platform: "newsletter",
         language: lang,
         taskInstructions: `You are writing a weekly newsletter for CatalystAI. Issue #${issueNumber}.
 
-Structure (follow exactly):
-1. OPENING — One personal sentence about what kept you busy this week.
-2. MAIN TOPIC — The week's key insight (250-350 words). If there's a blog post, summarize its main idea and add your perspective. If not, share a relevant insight about AI and business.
-3. FROM THE FIELD — One short real observation from your consulting work (no client names or confidential details).
-4. QUESTION — One thought-provoking question for the audience.
-5. CTA — One clear call to action.
+Generate the newsletter as structured content blocks. Each block has a type, title, and body (clean HTML using only <p> tags).
+
+Block types to produce (in order):
+1. "opening" — One personal sentence about what kept you busy this week.
+2. "blog_teaser" — If there's a blog post, summarize its main idea and add your perspective (250-350 words). If not, share a relevant insight about AI and business.
+3. "insight" — One short real observation from your consulting work (no client names or confidential details).
+4. "question" — One thought-provoking question for the audience.
+5. "cta" — One clear, gentle call to action (not aggressive).
 
 Context:
 - Week activity: ${weekActivity}
@@ -99,7 +101,13 @@ Context:
 Return ONLY valid JSON:
 {
   "subject": "Compelling subject line (max 60 chars, no issue number)",
-  "body_html": "Full newsletter body as clean HTML (use h2/h3/p tags, no inline styles)"
+  "blocks": [
+    { "type": "opening", "title": "Short block title", "body": "<p>Block content</p>" },
+    { "type": "blog_teaser", "title": "...", "body": "<p>...</p>" },
+    { "type": "insight", "title": "...", "body": "<p>...</p>" },
+    { "type": "question", "title": "...", "body": "<p>...</p>" },
+    { "type": "cta", "title": "...", "body": "<p>...</p>" }
+  ]
 }`,
       });
 
@@ -109,21 +117,42 @@ Return ONLY valid JSON:
           type: "object",
           properties: {
             subject: { type: "string" },
-            body_html: { type: "string" },
+            blocks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["opening", "blog_teaser", "insight", "question", "cta"] },
+                  title: { type: "string" },
+                  body: { type: "string" },
+                },
+              },
+            },
           },
         },
       });
 
       const parsed = typeof result === "object"
         ? result as any
-        : (() => { try { return JSON.parse(result as string); } catch { return { subject: "", body_html: "" }; } })();
+        : (() => { try { return JSON.parse(result as string); } catch { return { subject: "", blocks: [] }; } })();
 
-      return { subject: parsed.subject || "", body_html: parsed.body_html || "" };
+      // Add unique IDs to each block
+      const blocks = (parsed.blocks || []).map((b: any, i: number) => ({
+        ...b,
+        id: `block-${lang}-${i}-${Date.now()}`,
+      }));
+
+      // Render blocks to flat HTML for backward compatibility
+      const bodyHtml = blocks.map((b: any) =>
+        `<h3>${b.title || ""}</h3>${b.body || ""}`
+      ).join("\n");
+
+      return { subject: parsed.subject || "", blocks, bodyHtml };
     };
 
     const [enContent, heContent] = await Promise.all([
-      generateForLang("en"),
-      generateForLang("he"),
+      generateBlocksForLang("en"),
+      generateBlocksForLang("he"),
     ]);
 
     // Log AI costs
@@ -146,8 +175,10 @@ Return ONLY valid JSON:
       status: "draft",
       subject_en: enContent.subject || `CatalystAI Weekly #${issueNumber}`,
       subject_he: heContent.subject || `CatalystAI שבועי #${issueNumber}`,
-      body_en: enContent.body_html,
-      body_he: heContent.body_html,
+      blocks_en: enContent.blocks,
+      blocks_he: heContent.blocks,
+      body_en: enContent.bodyHtml,
+      body_he: heContent.bodyHtml,
       blog_content_id: weekBlog?.id || null,
       recipients_count: activeCount,
     });

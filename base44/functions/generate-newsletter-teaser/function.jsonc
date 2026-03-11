@@ -1,0 +1,5 @@
+{
+  "name": "generate-newsletter-teaser",
+  "entry": "index.ts",
+  "description": "Generate a newsletter teaser block from a content item"
+}

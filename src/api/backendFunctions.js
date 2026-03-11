@@ -26,4 +26,5 @@ export const backendFunctions = {
   strategicBrain: (data) => invoke('strategic-brain', data || {}),
   generateFollowUpDraft: (data) => invoke('generate-follow-up-draft', data),
   inlineEditContent: (data) => invoke('inline-edit-content', data),
+  generateNewsletterTeaser: (data) => invoke('generate-newsletter-teaser', data),
 };
