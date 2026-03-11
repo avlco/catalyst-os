@@ -27,4 +27,7 @@ export const backendFunctions = {
   generateFollowUpDraft: (data) => invoke('generate-follow-up-draft', data),
   inlineEditContent: (data) => invoke('inline-edit-content', data),
   generateNewsletterTeaser: (data) => invoke('generate-newsletter-teaser', data),
+  verifyLinkedInConnection: (data) => invoke('verify-linkedin-connection', data || {}),
+  publishToLinkedIn: (data) => invoke('publish-to-linkedin', data),
+  autoPublishScheduled: (data) => invoke('auto-publish-scheduled', data || {}),
 };
