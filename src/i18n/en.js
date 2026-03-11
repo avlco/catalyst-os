@@ -1027,6 +1027,8 @@ export default {
       selectCompanyPage: 'Select Company Page',
       noCompanyPages: 'No company pages found for your account',
       linkedinConnectionFailed: 'LinkedIn connection failed',
+      companyPageIdPlaceholder: 'Company Page ID or URL',
+      companyPageIdHelp: 'Paste your LinkedIn Company Page URL (e.g. linkedin.com/company/your-company) or the numeric ID',
     },
     preferences: {
       language: 'Language',

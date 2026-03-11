@@ -96,6 +96,7 @@ function IntegrationsTab() {
   const [liProfile, setLiProfile] = useState({ name: '', avatarUrl: '', personUrn: '' });
   const [liOrgs, setLiOrgs] = useState([]);
   const [liSelectedOrg, setLiSelectedOrg] = useState('');
+  const [liManualOrgId, setLiManualOrgId] = useState('');
 
   // Initialize LinkedIn state from settings
   useEffect(() => {
@@ -107,6 +108,7 @@ function IntegrationsTab() {
         personUrn: settings.linkedin_person_urn || '',
       });
       setLiSelectedOrg(settings.linkedin_company_id || '');
+      setLiManualOrgId(settings.linkedin_company_id || '');
     }
   }, [settings]);
 
@@ -185,6 +187,30 @@ function IntegrationsTab() {
             linkedin_company_name: org?.name || '',
           },
         });
+        toast.success(t('common.saved'));
+      } catch {
+        toast.error(t('common.saveFailed'));
+      }
+    }
+  };
+
+  const handleSaveManualOrg = async () => {
+    // Extract numeric ID from URL or plain ID
+    // Supports: "12345", "https://www.linkedin.com/company/12345", "https://www.linkedin.com/company/my-company/"
+    let orgId = liManualOrgId.trim();
+    const urlMatch = orgId.match(/linkedin\.com\/company\/([^/]+)/);
+    if (urlMatch) orgId = urlMatch[1];
+
+    if (settings) {
+      try {
+        await updateSettings.mutateAsync({
+          id: settings.id,
+          data: {
+            linkedin_company_id: orgId,
+            linkedin_company_name: orgId,
+          },
+        });
+        setLiSelectedOrg(orgId);
         toast.success(t('common.saved'));
       } catch {
         toast.error(t('common.saveFailed'));
@@ -316,10 +342,31 @@ function IntegrationsTab() {
               </div>
             )}
 
+            {/* Manual Company Page ID input — fallback when API can't fetch orgs */}
             {liConnected && liOrgs.length === 0 && (
-              <p className="text-caption text-muted-foreground">
-                {t('settings.integrations.noCompanyPages')}
-              </p>
+              <div>
+                <label className="text-caption text-muted-foreground block mb-1">
+                  {t('settings.integrations.companyPage')}
+                </label>
+                <div className="flex items-center gap-2 max-w-sm">
+                  <Input
+                    value={liManualOrgId}
+                    onChange={(e) => setLiManualOrgId(e.target.value)}
+                    placeholder={t('settings.integrations.companyPageIdPlaceholder')}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveManualOrg}
+                    disabled={!liManualOrgId.trim()}
+                  >
+                    {t('common.save')}
+                  </Button>
+                </div>
+                <p className="text-caption text-muted-foreground mt-1">
+                  {t('settings.integrations.companyPageIdHelp')}
+                </p>
+              </div>
             )}
 
             <Button onClick={handleTestLinkedIn} disabled={liTesting} variant={liConnected ? 'outline' : 'default'}>

@@ -1027,6 +1027,8 @@ export default {
       selectCompanyPage: 'בחירת דף חברה',
       noCompanyPages: 'לא נמצאו דפי חברה עבור החשבון שלכם',
       linkedinConnectionFailed: 'חיבור LinkedIn נכשל',
+      companyPageIdPlaceholder: 'ID או URL של דף החברה',
+      companyPageIdHelp: 'הדביקו את כתובת דף החברה ב-LinkedIn (לדוגמה linkedin.com/company/your-company) או את ה-ID המספרי',
     },
     preferences: {
       language: 'שפה',
