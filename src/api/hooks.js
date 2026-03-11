@@ -75,6 +75,8 @@ export const subscriberHooks = createEntityHooks('Subscriber', entities.Subscrib
 export const contentTemplateHooks = createEntityHooks('ContentTemplate', entities.ContentTemplate);
 export const documentHooks = createEntityHooks('Document', entities.Document);
 export const aiCallLogHooks = createEntityHooks('AICallLog', entities.AICallLog);
+export const brandVoiceHooks = createEntityHooks('BrandVoice', entities.BrandVoice);
+export const contentPlanHooks = createEntityHooks('ContentPlan', entities.ContentPlan);
 
 // Convenience aliases
 export const useProjects = personalProjectHooks.useList;
