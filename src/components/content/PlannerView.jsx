@@ -36,7 +36,10 @@ import {
   Mail,
   Plus,
   Lightbulb,
+  CalendarDays,
+  Library,
 } from 'lucide-react';
+import TopicBankView from '@/components/content/TopicBankView';
 import { toast } from 'sonner';
 
 // --- Local date helper (avoids UTC timezone shift) ---
@@ -179,6 +182,9 @@ export default function PlannerView() {
   const { data: contentItems = [], refetch: refetchContent } = contentItemHooks.useList();
   const updateContentItem = contentItemHooks.useUpdate();
   const createTopicBankItem = topicBankHooks.useCreate();
+
+  // Top-level view toggle: calendar vs topic bank
+  const [view, setView] = useState('calendar'); // 'calendar' | 'topicBank'
 
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -453,7 +459,29 @@ export default function PlannerView() {
 
       {/* Header + Quick Actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-h2 font-semibold">{t('content.planner.title')}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-h2 font-semibold">{t('content.planner.title')}</h2>
+          <div className="flex gap-1 bg-muted rounded-lg p-1">
+            <Button
+              variant={view === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('calendar')}
+              className="gap-1.5"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              {t('content.calendarViewLabel')}
+            </Button>
+            <Button
+              variant={view === 'topicBank' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('topicBank')}
+              className="gap-1.5"
+            >
+              <Library className="w-3.5 h-3.5" />
+              {t('content.topicBank.label')}
+            </Button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={handleCreateBlog}>
             <PenSquare className="w-4 h-4 me-1" />
@@ -476,6 +504,9 @@ export default function PlannerView() {
         </div>
       </div>
 
+      {view === 'topicBank' ? (
+        <TopicBankView />
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -611,6 +642,7 @@ export default function PlannerView() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      )}
 
       {/* Add Insight Dialog */}
       <Dialog open={showInsightDialog} onOpenChange={setShowInsightDialog}>
