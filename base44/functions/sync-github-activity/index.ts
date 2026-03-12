@@ -1,11 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-function generateCampaignName(prefix: string): string {
-  const now = new Date();
-  const weekNum = Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7);
-  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}-${prefix}`;
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -122,14 +116,6 @@ Deno.serve(async (req) => {
         });
 
         if (contentWorthy) {
-          const rawInput = await b44.entities.RawInput.create({
-            input_type: "github",
-            body: message.slice(0, 2000),
-            source_ref: sha,
-            processed: false,
-            campaign: generateCampaignName('github'),
-          });
-          await b44.entities.GitHubActivity.update(activity.id, { raw_input_id: rawInput.id });
           totalContentWorthy++;
 
           try {
