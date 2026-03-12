@@ -77,6 +77,7 @@ export const documentHooks = createEntityHooks('Document', entities.Document);
 export const aiCallLogHooks = createEntityHooks('AICallLog', entities.AICallLog);
 export const brandVoiceHooks = createEntityHooks('BrandVoice', entities.BrandVoice);
 export const contentPlanHooks = createEntityHooks('ContentPlan', entities.ContentPlan);
+export const topicBankHooks = createEntityHooks('TopicBank', entities.TopicBank);
 
 // Convenience aliases
 export const useProjects = personalProjectHooks.useList;
@@ -89,3 +90,8 @@ export const useBusinessProjects = businessProjectHooks.useList;
 export const useBusinessProject = businessProjectHooks.useGet;
 export const useContentItems = contentItemHooks.useList;
 export const useNotifications = notificationHooks.useList;
+export const useTopicBankList = topicBankHooks.useList;
+export const useTopicBankItem = topicBankHooks.useGet;
+export const useCreateTopicBankItem = topicBankHooks.useCreate;
+export const useUpdateTopicBankItem = topicBankHooks.useUpdate;
+export const useDeleteTopicBankItem = topicBankHooks.useDelete;
