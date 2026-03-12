@@ -904,6 +904,12 @@ export default {
         commit_analysis: 'קוד',
         signal: 'סיגנל',
       },
+      time: {
+        today: 'היום',
+        daysAgo: 'לפני {{count}} ימים',
+        weeksAgo: 'לפני {{count}} שבועות',
+        monthsAgo: 'לפני {{count}} חודשים',
+      },
     },
     planner: {
       title: 'מתכנן תוכן',

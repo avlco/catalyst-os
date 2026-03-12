@@ -904,6 +904,12 @@ export default {
         commit_analysis: 'Code',
         signal: 'Signal',
       },
+      time: {
+        today: 'Today',
+        daysAgo: '{{count}}d ago',
+        weeksAgo: '{{count}}w ago',
+        monthsAgo: '{{count}}mo ago',
+      },
     },
     planner: {
       title: 'Content Planner',

@@ -51,18 +51,18 @@ const SORT_OPTIONS = ['created_date', 'priority', 'title'];
 const priorityWeight = { urgent: 4, high: 3, medium: 2, low: 1 };
 
 // --- Relative date helper ---
-function relativeDate(dateStr) {
+function relativeDate(dateStr, t) {
   if (!dateStr) return '';
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now - date;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return '1d ago';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return `${Math.floor(diffDays / 30)}mo ago`;
+  if (diffDays === 0) return t('content.topicBank.time.today');
+  if (diffDays === 1) return t('content.topicBank.time.daysAgo', { count: 1 });
+  if (diffDays < 7) return t('content.topicBank.time.daysAgo', { count: diffDays });
+  if (diffDays < 30) return t('content.topicBank.time.weeksAgo', { count: Math.floor(diffDays / 7) });
+  return t('content.topicBank.time.monthsAgo', { count: Math.floor(diffDays / 30) });
 }
 
 // --- Days until expiry helper ---
@@ -473,7 +473,7 @@ export default function TopicBankView() {
 
                       {/* Created */}
                       <td className="px-3 py-2.5 text-caption text-muted-foreground whitespace-nowrap">
-                        {relativeDate(topic.created_date)}
+                        {relativeDate(topic.created_date, t)}
                       </td>
 
                       {/* Actions */}
