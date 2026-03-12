@@ -305,8 +305,8 @@ export default function NewsletterAssembler({ payload, onClose }) {
         // Also save the other language block to the newsletter directly
         const otherField = newsletterLang === 'en' ? 'blocks_he' : 'blocks_en';
         const otherBlocks = newsletterLang === 'en'
-          ? [...(newsletter.blocks_he || []), heBlock]
-          : [...(newsletter.blocks_en || []), enBlock];
+          ? [...(newsletter?.blocks_he || []), heBlock]
+          : [...(newsletter?.blocks_en || []), enBlock];
 
         await updateNewsletter.mutateAsync({
           id: newsletter.id,
@@ -368,12 +368,12 @@ export default function NewsletterAssembler({ payload, onClose }) {
       await updateNewsletter.mutateAsync({
         id: newsletter.id,
         data: {
-          blocks_en: newsletterLang === 'en' ? newsletterBlocks : (newsletter.blocks_en || []),
-          blocks_he: newsletterLang === 'he' ? newsletterBlocks : (newsletter.blocks_he || []),
-          body_en: renderBlocksToHtml(newsletterLang === 'en' ? newsletterBlocks : (newsletter.blocks_en || [])),
-          body_he: renderBlocksToHtml(newsletterLang === 'he' ? newsletterBlocks : (newsletter.blocks_he || [])),
-          subject_en: newsletterLang === 'en' ? subject : (newsletter.subject_en || ''),
-          subject_he: newsletterLang === 'he' ? subject : (newsletter.subject_he || ''),
+          blocks_en: newsletterLang === 'en' ? newsletterBlocks : (newsletter?.blocks_en || []),
+          blocks_he: newsletterLang === 'he' ? newsletterBlocks : (newsletter?.blocks_he || []),
+          body_en: renderBlocksToHtml(newsletterLang === 'en' ? newsletterBlocks : (newsletter?.blocks_en || [])),
+          body_he: renderBlocksToHtml(newsletterLang === 'he' ? newsletterBlocks : (newsletter?.blocks_he || [])),
+          subject_en: newsletterLang === 'en' ? subject : (newsletter?.subject_en || ''),
+          subject_he: newsletterLang === 'he' ? subject : (newsletter?.subject_he || ''),
         },
       });
 

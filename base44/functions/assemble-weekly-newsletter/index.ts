@@ -185,6 +185,7 @@ Return ONLY valid JSON:
 
     await b44.entities.Notification.create({
       type: "newsletter_ready",
+      title: `Newsletter #${issueNumber} ready for review`,
       title_en: `Newsletter #${issueNumber} ready for review`,
       title_he: `ניוזלטר #${issueNumber} מוכן לבדיקה`,
       body_en: `${activeCount} subscribers. AI-composed — review before sending.`,

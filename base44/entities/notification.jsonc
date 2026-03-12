@@ -3,7 +3,7 @@
   "name": "Notification",
   "type": "object",
   "properties": {
-    "type": { "type": "string", "enum": ["followup", "project_risk", "content_ready", "github_sync", "sprint_end", "budget_alert", "token_rotation", "newsletter_ready", "opportunity", "ai_cost_alert", "stale_lead", "sprint_ending", "ai_cost_summary", "discovery_complete", "content_published", "linkedin_published"] },
+    "type": { "type": "string", "enum": ["followup", "project_risk", "content_ready", "github_sync", "sprint_end", "budget_alert", "token_rotation", "newsletter_ready", "newsletter_sent", "opportunity", "ai_cost_alert", "stale_lead", "sprint_ending", "ai_cost_summary", "discovery_complete", "content_published", "linkedin_published", "content_signal"] },
     "title": { "type": "string", "maxLength": 100 },
     "body": { "type": "string" },
     "title_en": { "type": "string", "maxLength": 100, "description": "English title" },
