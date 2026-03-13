@@ -40,8 +40,10 @@ import {
   CalendarPlus,
   Library,
   MessageSquare,
+  BarChart3,
 } from 'lucide-react';
 import TopicBankView from '@/components/content/TopicBankView';
+import PublishedView from '@/components/content/PublishedView';
 import { toast } from 'sonner';
 
 // --- Local date helper (avoids UTC timezone shift) ---
@@ -185,8 +187,8 @@ export default function PlannerView() {
   const updateContentItem = contentItemHooks.useUpdate();
   const createTopicBankItem = topicBankHooks.useCreate();
 
-  // Top-level view toggle: calendar vs topic bank
-  const [view, setView] = useState('calendar'); // 'calendar' | 'topicBank'
+  // Top-level view toggle: calendar vs topic bank vs published
+  const [view, setView] = useState('calendar'); // 'calendar' | 'topicBank' | 'published'
 
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -482,6 +484,15 @@ export default function PlannerView() {
               <Library className="w-3.5 h-3.5" />
               {t('content.topicBank.label')}
             </Button>
+            <Button
+              variant={view === 'published' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('published')}
+              className="gap-1.5"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              {t('content.publishedView')}
+            </Button>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -516,6 +527,8 @@ export default function PlannerView() {
 
       {view === 'topicBank' ? (
         <TopicBankView />
+      ) : view === 'published' ? (
+        <PublishedView />
       ) : (
       <DndContext
         sensors={sensors}
