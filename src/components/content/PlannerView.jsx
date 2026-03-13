@@ -37,6 +37,7 @@ import {
   Plus,
   Lightbulb,
   CalendarDays,
+  CalendarPlus,
   Library,
 } from 'lucide-react';
 import TopicBankView from '@/components/content/TopicBankView';
@@ -483,6 +484,10 @@ export default function PlannerView() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => openOverlay('contentPlanner')}>
+            <CalendarPlus className="h-4 w-4 me-1" />
+            {t('content.planContent')}
+          </Button>
           <Button size="sm" variant="outline" onClick={handleCreateBlog}>
             <PenSquare className="w-4 h-4 me-1" />
             {t('content.planner.writeBlog')}

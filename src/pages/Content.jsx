@@ -4,6 +4,7 @@ import PlannerView from '@/components/content/PlannerView';
 import SocialDeskDrawer from '@/components/content/SocialDeskDrawer';
 import ZenEditor from '@/components/content/ZenEditor';
 import NewsletterAssembler from '@/components/content/NewsletterAssembler';
+import ContentPlanner from '@/components/content/ContentPlanner';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { contentItemHooks } from '@/api/hooks';
@@ -51,6 +52,10 @@ export default function Content() {
           payload={overlayPayload}
           onClose={closeOverlay}
         />
+      )}
+
+      {activeOverlay === 'contentPlanner' && (
+        <ContentPlanner onClose={closeOverlay} />
       )}
     </div>
   );
