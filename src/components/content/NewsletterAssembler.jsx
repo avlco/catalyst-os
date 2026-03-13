@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import SubscriberManager from './SubscriberManager';
 
 const BLOCK_TYPE_COLORS = {
   opening: 'bg-amber-500/20 text-amber-400',
@@ -187,6 +188,7 @@ export default function NewsletterAssembler({ payload, onClose }) {
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
+  const [showSubscribers, setShowSubscribers] = useState(false);
   const [subject, setSubject] = useState('');
   const saveRef = useRef(null);
 
@@ -506,9 +508,11 @@ export default function NewsletterAssembler({ payload, onClose }) {
               </div>
             )}
 
-            <p className="mt-4 text-caption text-muted-foreground">
-              {activeSubscriberCount} {t('content.newsletter.activeSubscribers')}
-            </p>
+            <div className="mt-4">
+              <Button variant="link" size="sm" className="px-0 text-caption" onClick={() => setShowSubscribers(true)}>
+                {t('content.newsletter.manageSubscribers', { count: activeSubscriberCount })}
+              </Button>
+            </div>
           </div>
 
           {/* Newsletter Blocks (65%) */}
@@ -596,6 +600,16 @@ export default function NewsletterAssembler({ payload, onClose }) {
               {sending ? t('content.newsletter.sending') : t('content.newsletter.confirmSendBtn')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscriber Manager Dialog */}
+      <Dialog open={showSubscribers} onOpenChange={setShowSubscribers}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('content.subscribers.title')}</DialogTitle>
+          </DialogHeader>
+          <SubscriberManager />
         </DialogContent>
       </Dialog>
     </div>
