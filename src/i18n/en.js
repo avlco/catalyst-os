@@ -863,7 +863,10 @@ export default {
       publishFailed: 'Failed to publish to LinkedIn',
       scheduledSuccess: 'Post scheduled',
       linkedinNotConnected: 'LinkedIn not connected. Connect in Settings first.',
+      writeYourPost: 'What do you want to post about?',
+      postPlaceholder: 'Write your topic, idea, or key message here...',
     },
+    writePost: 'Write Post',
     addInsight: 'Add Insight',
     planContent: 'Plan Content',
     insightDialog: {

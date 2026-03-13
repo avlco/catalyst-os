@@ -10,6 +10,7 @@ import { rawInputHooks, contentItemHooks, userSettingsHooks } from '@/api/hooks'
 import WorkspaceContentCard from '@/components/content/WorkspaceContentCard';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CardSkeleton } from '@/components/ui/skeleton';
 
@@ -35,6 +36,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
     isGenerating,
   } = useContentWorkspaceStore();
 
+  const createRawInput = rawInputHooks.useCreate();
   const updateRawInput = rawInputHooks.useUpdate();
   const updateContentItem = contentItemHooks.useUpdate();
 
@@ -53,6 +55,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('10:00');
+  const [localSourceText, setLocalSourceText] = useState('');
 
   // Check LinkedIn connection for enabling publish buttons
   const { data: settingsList = [] } = userSettingsHooks.useList();
@@ -121,11 +124,28 @@ export default function SocialDeskDrawer({ payload, onClose }) {
 
   // --- Generate content ---
   const handleGenerate = useCallback(async () => {
-    if (!rawInput?.id) return;
+    let inputId = rawInput?.id;
+
+    // Standalone mode: create a RawInput on-the-fly from typed text
+    if (!inputId && localSourceText.trim()) {
+      try {
+        const newInput = await createRawInput.mutateAsync({
+          input_type: 'text',
+          body: localSourceText.trim(),
+        });
+        inputId = newInput.id;
+        setRawInput(newInput);
+      } catch (err) {
+        toast.error(t('content.socialDesk.saveFailed'));
+        return;
+      }
+    }
+
+    if (!inputId) return;
     try {
       setGenerating(true);
       const result = await backendFunctions.generateContent({
-        rawInputId: rawInput.id,
+        rawInputId: inputId,
         platforms,
         tone,
         language,
@@ -140,7 +160,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
 
         const freshItems = queryClient.getQueryData(['ContentItem']) || [];
         const createdItems = freshItems.filter(
-          (item) => item.raw_input_id === rawInput.id && item.ai_generated
+          (item) => item.raw_input_id === inputId && item.ai_generated
         );
 
         if (createdItems.length > 0) {
@@ -160,15 +180,16 @@ export default function SocialDeskDrawer({ payload, onClose }) {
       toast.error(t('content.create.generationFailed'));
       setGenerating(false);
     }
-  }, [rawInput?.id, platforms, tone, language, setGenerating, setDraftCards, queryClient, t]);
+  }, [rawInput?.id, localSourceText, createRawInput, setRawInput, platforms, tone, language, setGenerating, setDraftCards, queryClient, t]);
 
   // --- Regenerate a single card ---
   const handleRegenerateCard = useCallback(async (card) => {
-    if (!rawInput?.id) return;
+    const inputId = rawInput?.id || activeRawInput?.id;
+    if (!inputId) return;
     try {
       setCardGenerating(card.id, true);
       await backendFunctions.generateContent({
-        rawInputId: rawInput.id,
+        rawInputId: inputId,
         platforms: [card.platform],
         tone: card.tone || tone,
         language: card.language || language,
@@ -192,7 +213,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
     } finally {
       setCardGenerating(card.id, false);
     }
-  }, [rawInput?.id, tone, language, setCardGenerating, updateCard, queryClient, t]);
+  }, [rawInput?.id, activeRawInput?.id, tone, language, setCardGenerating, updateCard, queryClient, t]);
 
   // --- Change tone for a card ---
   const handleCardToneChange = useCallback((cardId, newTone) => {
@@ -248,9 +269,10 @@ export default function SocialDeskDrawer({ payload, onClose }) {
       await Promise.all(savePromises);
 
       // Mark rawInput as processed
-      if (isCreateMode && rawInput?.id) {
+      const inputIdToMark = rawInput?.id || activeRawInput?.id;
+      if (isCreateMode && inputIdToMark) {
         await updateRawInput.mutateAsync({
-          id: rawInput.id,
+          id: inputIdToMark,
           data: { processed: true },
         });
       }
@@ -262,7 +284,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
     } finally {
       setIsSaving(false);
     }
-  }, [getDirtyCards, updateContentItem, updateRawInput, isCreateMode, rawInput?.id, targetDate, t, onClose]);
+  }, [getDirtyCards, updateContentItem, updateRawInput, isCreateMode, rawInput?.id, activeRawInput?.id, targetDate, t, onClose]);
 
   // --- Publish Now (LinkedIn) ---
   const handlePublishNow = useCallback(async () => {
@@ -356,9 +378,10 @@ export default function SocialDeskDrawer({ payload, onClose }) {
       );
 
       // Mark rawInput as processed
-      if (isCreateMode && rawInput?.id) {
+      const inputIdToMark = rawInput?.id || activeRawInput?.id;
+      if (isCreateMode && inputIdToMark) {
         await updateRawInput.mutateAsync({
-          id: rawInput.id,
+          id: inputIdToMark,
           data: { processed: true },
         });
       }
@@ -372,7 +395,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
       setIsSaving(false);
       setShowScheduler(false);
     }
-  }, [scheduleDate, scheduleTime, draftCards, updateContentItem, isCreateMode, rawInput, updateRawInput, queryClient, t, onClose]);
+  }, [scheduleDate, scheduleTime, draftCards, updateContentItem, isCreateMode, rawInput, activeRawInput?.id, updateRawInput, queryClient, t, onClose]);
 
   // Source text for the panel
   const sourceText = isCreateMode
@@ -460,9 +483,21 @@ export default function SocialDeskDrawer({ payload, onClose }) {
             )}
 
             {/* Source text */}
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-body-m text-foreground whitespace-pre-wrap">{sourceText}</p>
-            </div>
+            {!rawInput && isCreateMode ? (
+              <div className="space-y-3">
+                <label className="text-sm font-medium">{t('content.socialDesk.writeYourPost')}</label>
+                <Textarea
+                  value={localSourceText}
+                  onChange={(e) => setLocalSourceText(e.target.value)}
+                  placeholder={t('content.socialDesk.postPlaceholder')}
+                  rows={6}
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-body-m text-foreground whitespace-pre-wrap">{sourceText}</p>
+              </div>
+            )}
 
             {/* Platform & Tone controls — only in create mode */}
             {isCreateMode && (
@@ -527,7 +562,7 @@ export default function SocialDeskDrawer({ payload, onClose }) {
                 {/* Re-generate button */}
                 <Button
                   onClick={handleGenerate}
-                  disabled={isGenerating || platforms.length === 0}
+                  disabled={isGenerating || platforms.length === 0 || (!rawInput?.id && !localSourceText.trim())}
                   className="w-full"
                 >
                   {isGenerating ? (

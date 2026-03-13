@@ -863,7 +863,10 @@ export default {
       publishFailed: 'הפרסום ב-LinkedIn נכשל',
       scheduledSuccess: 'הפוסט תוזמן',
       linkedinNotConnected: 'LinkedIn לא מחובר. חברו בהגדרות קודם.',
+      writeYourPost: 'על מה תרצה לפרסם?',
+      postPlaceholder: 'כתוב את הנושא, הרעיון או המסר המרכזי כאן...',
     },
+    writePost: 'כתוב פוסט',
     addInsight: 'הוסף תובנה',
     planContent: 'תכנן תוכן',
     insightDialog: {

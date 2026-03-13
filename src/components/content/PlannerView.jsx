@@ -39,6 +39,7 @@ import {
   CalendarDays,
   CalendarPlus,
   Library,
+  MessageSquare,
 } from 'lucide-react';
 import TopicBankView from '@/components/content/TopicBankView';
 import { toast } from 'sonner';
@@ -487,6 +488,10 @@ export default function PlannerView() {
           <Button size="sm" variant="outline" onClick={() => openOverlay('contentPlanner')}>
             <CalendarPlus className="h-4 w-4 me-1" />
             {t('content.planContent')}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => openOverlay('socialDesk', { mode: 'create' })}>
+            <MessageSquare className="h-4 w-4 me-1" />
+            {t('content.writePost')}
           </Button>
           <Button size="sm" variant="outline" onClick={handleCreateBlog}>
             <PenSquare className="w-4 h-4 me-1" />
