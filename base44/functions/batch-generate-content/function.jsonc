@@ -1,5 +1,6 @@
 {
   "name": "batch-generate-content",
   "description": "Generates AI content for multiple scheduled content items based on their topics and platform requirements",
-  "type": "invocable"
+  "type": "invocable",
+  "entry": "index.ts"
 }
