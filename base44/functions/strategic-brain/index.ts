@@ -162,10 +162,225 @@ function determineGrowthPhase(planCount: number): "establish" | "demonstrate" | 
   return "attract";                          // Month 3+
 }
 
+async function handleSuggestMode(b44: any, body: any): Promise<Response> {
+  const {
+    mix = {},
+    available_topics = [],
+    timeframe = "weekly",
+    start_date,
+    language = "en",
+  } = body;
+
+  if (!available_topics.length) {
+    return Response.json(
+      { error: "No available_topics provided for suggest mode" },
+      { status: 400 }
+    );
+  }
+
+  const totalSlots = Object.values(mix as Record<string, number>).reduce(
+    (sum: number, n: number) => sum + n,
+    0
+  );
+  if (totalSlots === 0) {
+    return Response.json(
+      { error: "Content mix is empty — nothing to suggest" },
+      { status: 400 }
+    );
+  }
+
+  // 1. Load BrandVoice for context
+  const bv = await loadBrandVoiceData(b44);
+
+  // 2. Load recent content titles to avoid repetition
+  let recentTitles: string[] = [];
+  try {
+    const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+    const content = await b44.entities.ContentItem.list();
+    recentTitles = content
+      .filter(
+        (c: any) =>
+          c.updated_date && new Date(c.updated_date) >= fourWeeksAgo
+      )
+      .map((c: any) => c.title)
+      .filter(Boolean);
+  } catch {
+    /* non-critical */
+  }
+
+  // 3. Determine growth phase
+  let growthPhase: string;
+  try {
+    const existingPlans = await b44.entities.ContentPlan.list();
+    growthPhase = determineGrowthPhase(existingPlans.length);
+  } catch {
+    growthPhase = "establish";
+  }
+
+  const growthDescriptions: Record<string, string> = {
+    establish:
+      "ESTABLISH — building brand awareness. Favor educational, positioning, and authority-building topics.",
+    demonstrate:
+      "DEMONSTRATE — proving value with evidence. Favor case studies, results, and credibility-building topics.",
+    attract:
+      "ATTRACT — generating conversations and leads. Favor provocative, engagement-driving, and deep-dive topics.",
+  };
+
+  // 4. Build slots description from mix
+  const slots: { index: number; platform: string }[] = [];
+  let idx = 0;
+  for (const [platform, count] of Object.entries(
+    mix as Record<string, number>
+  )) {
+    for (let i = 0; i < count; i++) {
+      slots.push({ index: idx++, platform });
+    }
+  }
+
+  const startTime = Date.now();
+
+  // 5. Build the suggest prompt
+  const topicsJson = JSON.stringify(
+    available_topics.map((t: any) => ({
+      id: t.id,
+      title: t.title,
+      description: t.description || "",
+      freshness: t.freshness || "evergreen",
+      priority: t.priority || "medium",
+      tags: t.tags || [],
+    })),
+    null,
+    2
+  );
+
+  const slotsJson = JSON.stringify(slots, null, 2);
+
+  const prompt = `${bv.identity}
+Target Audience: ${bv.audience}
+Tone: ${bv.tone_attributes.join(", ")}
+Core Topics: ${bv.topics.join(", ")}
+
+You are the Strategic Brain advisor for a content system. Your job: assign the best topic from a TopicBank to each content slot for ${timeframe === "weekly" ? "the upcoming week" : "the upcoming period"}.
+
+GROWTH PHASE: ${growthDescriptions[growthPhase] || growthDescriptions.establish}
+
+CONTENT SLOTS TO FILL:
+${slotsJson}
+
+AVAILABLE TOPICS FROM TOPIC BANK:
+${topicsJson}
+
+${recentTitles.length ? `RECENTLY PUBLISHED TITLES (avoid repetition):\n${recentTitles.slice(0, 20).map((t) => `- ${t}`).join("\n")}` : "No recent content to worry about."}
+
+${start_date ? `Start date for scheduling: ${start_date}` : ""}
+
+ASSIGNMENT RULES:
+1. Assign exactly one topic to each slot. A topic MAY be used for multiple slots ONLY if there are more slots than topics.
+2. Prioritize time-sensitive topics (freshness "trending" or "seasonal") — they should be assigned first.
+3. Higher priority topics should be placed in higher-reach platforms (e.g., LinkedIn over blog for "urgent" topics).
+4. Ensure topic variety — do not cluster slots with the same tags when alternatives exist.
+5. Consider brand voice alignment — the topic should naturally fit the platform's tone and audience.
+6. For each slot, suggest a specific date (within the ${timeframe} starting ${start_date || "next Monday"}) and a tone that fits.
+7. Provide brief reasoning for each assignment explaining WHY this topic fits this slot.
+8. End with overall advisor_notes — strategic observations about the mix (gaps, opportunities, warnings).
+
+${language === "he" ? "Write reasoning and advisor_notes in Hebrew." : "Write reasoning and advisor_notes in English."}
+
+Return ONLY valid JSON matching this schema:
+{
+  "suggestions": [
+    {
+      "slot_index": 0,
+      "platform": "linkedin_personal",
+      "topic_bank_id": "topic-id-here",
+      "topic_title": "The topic title",
+      "reasoning": "Why this topic fits this slot",
+      "suggested_date": "YYYY-MM-DD",
+      "suggested_tone": "professional | personal | educational"
+    }
+  ],
+  "advisor_notes": "Overall strategic notes about this content mix"
+}`;
+
+  const responseSchema = {
+    type: "object",
+    properties: {
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            slot_index: { type: "number" },
+            platform: { type: "string" },
+            topic_bank_id: { type: "string" },
+            topic_title: { type: "string" },
+            reasoning: { type: "string" },
+            suggested_date: { type: "string" },
+            suggested_tone: { type: "string" },
+          },
+        },
+      },
+      advisor_notes: { type: "string" },
+    },
+  };
+
+  const result = await b44.integrations.Core.InvokeLLM({
+    prompt,
+    response_json_schema: responseSchema,
+  });
+
+  const parsed =
+    typeof result === "object"
+      ? (result as any)
+      : (() => {
+          try {
+            return JSON.parse(String(result));
+          } catch {
+            return { suggestions: [], advisor_notes: "" };
+          }
+        })();
+
+  // 6. Log AI usage
+  const inputTokens = estimateTokens(prompt);
+  const outputTokens = estimateTokens(JSON.stringify(parsed));
+  await b44.entities.AICallLog.create({
+    function_name: "strategic-brain",
+    model: "base44-llm",
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
+    cost_usd: estimateCost(inputTokens, outputTokens),
+    duration_ms: Date.now() - startTime,
+    success: true,
+    notes: `suggest mode — ${totalSlots} slots, ${available_topics.length} topics`,
+  });
+
+  // 7. Return suggestions directly — no entity creation
+  return Response.json({
+    mode: "suggest",
+    growthPhase,
+    suggestions: parsed.suggestions || [],
+    advisor_notes: parsed.advisor_notes || "",
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const b44 = base44.asServiceRole;
+
+    const body = await req.json().catch(() => ({}));
+    const mode = body.mode || "plan";
+
+    // ---------------------------------------------------------------
+    // MODE: SUGGEST — recommend TopicBank items for content slots
+    // ---------------------------------------------------------------
+    if (mode === "suggest") {
+      return await handleSuggestMode(b44, body);
+    }
+
+    // ---------------------------------------------------------------
+    // MODE: PLAN (default) — full 4-week plan + week 1 drafts
+    // ---------------------------------------------------------------
 
     // Check for existing plan this week
     const now = new Date();

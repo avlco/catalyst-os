@@ -21,3 +21,4 @@ export const Document = base44.entities.Document;
 export const AICallLog = base44.entities.AICallLog;
 export const BrandVoice = base44.entities.BrandVoice;
 export const ContentPlan = base44.entities.ContentPlan;
+export const TopicBank = base44.entities.TopicBank;

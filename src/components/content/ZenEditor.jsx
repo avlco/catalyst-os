@@ -64,7 +64,8 @@ export default function ZenEditor({ payload, onClose }) {
   const [lang, setLang] = useState(contentItem?.language || language || 'en');
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [generating, setGenerating] = useState(!isEditMode);
+  const hasRawInput = !!(payload?.rawInput?.id || payload?.rawInputId);
+  const [generating, setGenerating] = useState(!isEditMode && hasRawInput);
   const [contentItemId, setContentItemId] = useState(contentItem?.id || null);
 
   const updateMutation = contentItemHooks.useUpdate();
@@ -125,7 +126,7 @@ export default function ZenEditor({ payload, onClose }) {
 
   // Create mode: expand raw input to blog post
   useEffect(() => {
-    if (isEditMode || !editor) return;
+    if (isEditMode || !editor || !hasRawInput) return;
 
     let cancelled = false;
     const expand = async () => {

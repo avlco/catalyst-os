@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost, generateCampaignName } from "../_shared/brandVoicePrompt.ts";
+import { loadBrandVoiceData, buildContentPrompt, estimateTokens, estimateCost } from "../_shared/brandVoicePrompt.ts";
 
 interface Signal {
   type: string;
@@ -226,35 +226,62 @@ async function gatherLearningData(contentItems: any[]): Promise<LearningData> {
   };
 }
 
-async function generateContentFromSignal(
+// --- Freshness / Priority / Expiry helpers for TopicBank entries ---
+
+function getSignalFreshness(signalType: string): "time_sensitive" | "evergreen" {
+  const timeSensitiveTypes = ["client_won", "stale_lead", "project_active", "project_completed", "milestone_completed"];
+  return timeSensitiveTypes.includes(signalType) ? "time_sensitive" : "evergreen";
+}
+
+function getSignalExpiry(signalType: string): string | undefined {
+  const now = Date.now();
+  const shortExpiry = ["client_won", "stale_lead", "project_active"]; // 7 days
+  const medExpiry = ["project_completed", "milestone_completed"];      // 14 days
+  if (shortExpiry.includes(signalType)) {
+    return new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString();
+  }
+  if (medExpiry.includes(signalType)) {
+    return new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString();
+  }
+  return undefined; // evergreen — no expiry
+}
+
+function getSignalPriority(signalType: string): "low" | "medium" | "high" {
+  const highPriority = ["client_won", "project_completed"];
+  const medPriority = ["project_active", "milestone_completed", "stale_lead"];
+  if (highPriority.includes(signalType)) return "high";
+  if (medPriority.includes(signalType)) return "medium";
+  return "low";
+}
+
+async function generateTopicAnglesFromSignal(
   b44: any,
   signal: Signal,
   bv: any,
   learningContext: string
 ): Promise<any[]> {
   const prompt = buildContentPrompt(bv, {
-    taskInstructions: `You are generating content suggestions based on a business signal.
+    taskInstructions: `You are generating content TOPIC IDEAS (not full drafts) based on a business signal.
 
 Signal type: ${signal.type}
 Context: ${signal.context}
 ${learningContext ? `\nLEARNING FROM PAST CONTENT (use this to improve quality):\n${learningContext}` : ""}
 
-Generate 2-3 different content angles for this signal. Each angle should be a complete, ready-to-review social media post or blog draft.
+Generate 2-3 different content angle ideas for this signal. Each angle should be a concise topic suggestion with a clear direction — NOT a full post.
 
 CRITICAL RULES:
 - NEVER mention client names, company names, or confidential details
 - Translate all technical concepts into business-outcome language for SMB audiences
 - Each angle targets a different platform or perspective
-- Write in first person as the brand
 - Prefer platforms and tones that have higher approval rates (if learning data is available)
 
 Return JSON array:
 [{
-  "platform": "linkedin_personal" | "facebook_business" | "blog",
-  "title": "Post title or hook (max 100 chars)",
-  "body": "Full post content ready to publish",
-  "language": "en",
-  "tone": "professional" | "personal" | "educational"
+  "title": "Concise topic/angle title (max 100 chars)",
+  "description": "2-3 sentence direction explaining the angle, key points, and target audience",
+  "platforms": ["linkedin_personal"] | ["linkedin_personal", "blog"],
+  "tone": "professional" | "personal" | "educational",
+  "tags": ["relevant", "topic", "tags"]
 }]`,
   });
 
@@ -266,11 +293,11 @@ Return JSON array:
         items: {
           type: "object",
           properties: {
-            platform: { type: "string" },
             title: { type: "string" },
-            body: { type: "string" },
-            language: { type: "string" },
+            description: { type: "string" },
+            platforms: { type: "array", items: { type: "string" } },
             tone: { type: "string" },
+            tags: { type: "array", items: { type: "string" } },
           },
         },
       },
@@ -308,16 +335,16 @@ Deno.serve(async (req) => {
       return Response.json({ signals: 0, created: 0 });
     }
 
-    // Deduplicate: skip signals that already generated content
-    const existingContent = await b44.entities.ContentItem.list();
+    // Deduplicate: skip signals that already have TopicBank entries
+    const existingTopics = await b44.entities.TopicBank.list();
     const existingSignalRefs = new Set(
-      existingContent
-        .filter((c: any) => c.source_type === "signal" && c.signal_ref)
-        .map((c: any) => `${c.signal_type}:${c.signal_ref}`)
+      existingTopics
+        .filter((t: any) => t.source_type === "signal" && t.source_name)
+        .map((t: any) => `${t.source_name}:${(t.tags || []).find((tag: string) => tag.startsWith("ref:")) || ""}`)
     );
 
     const newSignals = signals.filter(
-      (s) => !s.entityId || !existingSignalRefs.has(`${s.type}:${s.entityId}`)
+      (s) => !s.entityId || !existingSignalRefs.has(`${s.type}:ref:${s.entityId}`)
     );
 
     if (newSignals.length === 0) {
@@ -329,7 +356,8 @@ Deno.serve(async (req) => {
       return Response.json({ signals: signals.length, new: 0, created: 0 });
     }
 
-    // Learning Loop: gather historical approval data
+    // Learning Loop: gather historical approval data from ContentItem (legacy data)
+    const existingContent = await b44.entities.ContentItem.list();
     const learning = await gatherLearningData(existingContent);
 
     // Sort signals: prioritize types with higher approval rates, deprioritize low performers
@@ -357,32 +385,39 @@ Deno.serve(async (req) => {
     const toProcess = filteredSignals.slice(0, 5);
 
     for (const signal of toProcess) {
-      const drafts = await generateContentFromSignal(b44, signal, bv, learning.summary);
+      const angles = await generateTopicAnglesFromSignal(b44, signal, bv, learning.summary);
 
-      for (const draft of drafts) {
-        if (!draft.body || draft.body.length < 30) continue;
+      for (const angle of angles) {
+        if (!angle.title || angle.title.length < 5) continue;
 
-        await b44.entities.ContentItem.create({
-          type: draft.platform === "blog" ? "blog" : "post",
-          status: "idea",
-          platform: draft.platform || "linkedin_personal",
-          language: draft.language || "en",
-          tone: draft.tone || "professional",
-          title: (draft.title || "").slice(0, 200),
-          body: draft.body,
+        const tags = [signal.type, ...(angle.tags || [])];
+        // Store entity ref in tags for deduplication
+        if (signal.entityId) tags.push(`ref:${signal.entityId}`);
+
+        const topicData: Record<string, any> = {
+          title: (angle.title || "").slice(0, 200),
+          description: angle.description || "",
           source_type: "signal",
-          signal_type: signal.type,
-          signal_ref: signal.entityId || "",
-          ai_generated: true,
-          approved_by_human: false,
-          campaign: generateCampaignName(signal.type),
-        });
+          source_name: signal.type,
+          freshness: getSignalFreshness(signal.type),
+          status: "new",
+          tags,
+          suggested_platforms: angle.platforms || ["linkedin_personal"],
+          suggested_tone: angle.tone || "professional",
+          language: "both",
+          priority: getSignalPriority(signal.type),
+        };
+
+        const expiry = getSignalExpiry(signal.type);
+        if (expiry) topicData.expires_at = expiry;
+
+        await b44.entities.TopicBank.create(topicData);
         totalCreated++;
       }
 
       // Rough token estimates
       totalInputTokens += estimateTokens(JSON.stringify(bv) + signal.context) + 400;
-      totalOutputTokens += estimateTokens(JSON.stringify(drafts));
+      totalOutputTokens += estimateTokens(JSON.stringify(angles));
     }
 
     // Log AI cost
@@ -409,10 +444,11 @@ Deno.serve(async (req) => {
     if (totalCreated > 0) {
       await b44.entities.Notification.create({
         type: "content_signal",
-        title_en: `${totalCreated} content idea${totalCreated > 1 ? "s" : ""} from ${toProcess.length} signal${toProcess.length > 1 ? "s" : ""}`,
-        title_he: `${totalCreated} רעיונ${totalCreated > 1 ? "ות" : ""} תוכן מ-${toProcess.length} איתות${toProcess.length > 1 ? "ים" : ""}`,
+        title: `${totalCreated} topic${totalCreated > 1 ? "s" : ""} added to Topic Bank`,
+        title_en: `${totalCreated} topic${totalCreated > 1 ? "s" : ""} from ${toProcess.length} signal${toProcess.length > 1 ? "s" : ""}`,
+        title_he: `${totalCreated} נוש${totalCreated > 1 ? "אים" : "א"} מ-${toProcess.length} איתות${toProcess.length > 1 ? "ים" : ""}`,
         body_en: `Signals: ${toProcess.map((s) => s.type.replace(/_/g, " ")).join(", ")}`,
-        body_he: "",
+        body_he: `איתותים: ${toProcess.map((s) => s.type.replace(/_/g, " ")).join(", ")}`,
         priority: "medium",
         read: false,
         action_url: "/content",

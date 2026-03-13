@@ -2,13 +2,17 @@ import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { rawInputHooks, contentItemHooks, contentPlanHooks } from '@/api/hooks';
+import { rawInputHooks, contentItemHooks, contentPlanHooks, topicBankHooks } from '@/api/hooks';
 import { backendFunctions } from '@/api/backendFunctions';
 import { useContentWorkspaceStore } from '@/stores/contentWorkspaceStore';
 import { platformColors, statusVariant, ContentPlanCard } from '@/components/content/contentConstants';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select } from '@/components/ui/select';
 import {
   DndContext,
   DragOverlay,
@@ -31,7 +35,15 @@ import {
   PenSquare,
   Mail,
   Plus,
+  Lightbulb,
+  CalendarDays,
+  CalendarPlus,
+  Library,
+  MessageSquare,
+  BarChart3,
 } from 'lucide-react';
+import TopicBankView from '@/components/content/TopicBankView';
+import PublishedView from '@/components/content/PublishedView';
 import { toast } from 'sonner';
 
 // --- Local date helper (avoids UTC timezone shift) ---
@@ -173,6 +185,10 @@ export default function PlannerView() {
   const { data: rawInputs = [] } = rawInputHooks.useList();
   const { data: contentItems = [], refetch: refetchContent } = contentItemHooks.useList();
   const updateContentItem = contentItemHooks.useUpdate();
+  const createTopicBankItem = topicBankHooks.useCreate();
+
+  // Top-level view toggle: calendar vs topic bank vs published
+  const [view, setView] = useState('calendar'); // 'calendar' | 'topicBank' | 'published'
 
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -345,6 +361,67 @@ export default function PlannerView() {
     }
   };
 
+  // Insight dialog state
+  const [showInsightDialog, setShowInsightDialog] = useState(false);
+  const [insightTitle, setInsightTitle] = useState('');
+  const [insightDescription, setInsightDescription] = useState('');
+  const [insightFreshness, setInsightFreshness] = useState('evergreen');
+  const [insightExpiryDate, setInsightExpiryDate] = useState('');
+  const [insightTags, setInsightTags] = useState('');
+  const [insightPlatforms, setInsightPlatforms] = useState([]);
+  const [insightPriority, setInsightPriority] = useState('medium');
+
+  const PLATFORM_OPTIONS = [
+    { value: 'linkedin_personal', labelKey: 'content.templates.platforms.linkedin_personal' },
+    { value: 'linkedin_business', labelKey: 'content.templates.platforms.linkedin_business' },
+    { value: 'facebook_business', labelKey: 'content.templates.platforms.facebook_business' },
+    { value: 'blog', labelKey: 'content.templates.platforms.blog' },
+    { value: 'newsletter', labelKey: 'content.templates.platforms.newsletter' },
+  ];
+
+  const resetInsightForm = () => {
+    setInsightTitle('');
+    setInsightDescription('');
+    setInsightFreshness('evergreen');
+    setInsightExpiryDate('');
+    setInsightTags('');
+    setInsightPlatforms([]);
+    setInsightPriority('medium');
+  };
+
+  const handleInsightSubmit = async () => {
+    if (!insightTitle.trim()) return;
+    try {
+      await createTopicBankItem.mutateAsync({
+        title: insightTitle.trim(),
+        description: insightDescription.trim() || undefined,
+        source_type: 'manual_insight',
+        freshness: insightFreshness,
+        expires_at: insightFreshness === 'time_sensitive' && insightExpiryDate
+          ? new Date(insightExpiryDate).toISOString()
+          : undefined,
+        status: 'new',
+        tags: insightTags.split(',').map(s => s.trim()).filter(Boolean),
+        suggested_platforms: insightPlatforms,
+        priority: insightPriority,
+        language: 'both',
+      });
+      toast.success(t('content.insightDialog.saved'));
+      resetInsightForm();
+      setShowInsightDialog(false);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const togglePlatform = (platform) => {
+    setInsightPlatforms(prev =>
+      prev.includes(platform)
+        ? prev.filter(p => p !== platform)
+        : [...prev, platform]
+    );
+  };
+
   // Scan buttons
   const [scanning, setScanning] = useState(null);
   const handleScan = async (type) => {
@@ -386,8 +463,47 @@ export default function PlannerView() {
 
       {/* Header + Quick Actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-h2 font-semibold">{t('content.planner.title')}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-h2 font-semibold">{t('content.planner.title')}</h2>
+          <div className="flex gap-1 bg-muted rounded-lg p-1">
+            <Button
+              variant={view === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('calendar')}
+              className="gap-1.5"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              {t('content.calendarViewLabel')}
+            </Button>
+            <Button
+              variant={view === 'topicBank' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('topicBank')}
+              className="gap-1.5"
+            >
+              <Library className="w-3.5 h-3.5" />
+              {t('content.topicBank.label')}
+            </Button>
+            <Button
+              variant={view === 'published' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView('published')}
+              className="gap-1.5"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              {t('content.publishedView')}
+            </Button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => openOverlay('contentPlanner')}>
+            <CalendarPlus className="h-4 w-4 me-1" />
+            {t('content.planContent')}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => openOverlay('socialDesk', { mode: 'create' })}>
+            <MessageSquare className="h-4 w-4 me-1" />
+            {t('content.writePost')}
+          </Button>
           <Button size="sm" variant="outline" onClick={handleCreateBlog}>
             <PenSquare className="w-4 h-4 me-1" />
             {t('content.planner.writeBlog')}
@@ -395,6 +511,10 @@ export default function PlannerView() {
           <Button size="sm" variant="outline" onClick={handleOpenNewsletter}>
             <Mail className="w-4 h-4 me-1" />
             {t('content.planner.newsletter')}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowInsightDialog(true)}>
+            <Lightbulb className="h-4 w-4 me-1" />
+            {t('content.addInsight')}
           </Button>
           {draftItemsOnCalendar.length > 0 && (
             <Button onClick={handleApproveAll} disabled={approving}>
@@ -405,6 +525,11 @@ export default function PlannerView() {
         </div>
       </div>
 
+      {view === 'topicBank' ? (
+        <TopicBankView />
+      ) : view === 'published' ? (
+        <PublishedView />
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -540,6 +665,136 @@ export default function PlannerView() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      )}
+
+      {/* Add Insight Dialog */}
+      <Dialog open={showInsightDialog} onOpenChange={setShowInsightDialog}>
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>{t('content.insightDialog.title')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Title */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.topicTitle')}</label>
+              <Input
+                value={insightTitle}
+                onChange={(e) => setInsightTitle(e.target.value)}
+                placeholder={t('content.insightDialog.topicTitle')}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.description')}</label>
+              <Textarea
+                value={insightDescription}
+                onChange={(e) => setInsightDescription(e.target.value)}
+                placeholder={t('content.insightDialog.description')}
+                rows={3}
+              />
+            </div>
+
+            {/* Freshness toggle */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.freshness')}</label>
+              <div className="flex rounded-md border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setInsightFreshness('time_sensitive')}
+                  className={cn(
+                    'flex-1 px-3 py-1.5 text-sm transition-colors',
+                    insightFreshness === 'time_sensitive'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80'
+                  )}
+                >
+                  {t('content.insightDialog.timeSensitive')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInsightFreshness('evergreen')}
+                  className={cn(
+                    'flex-1 px-3 py-1.5 text-sm transition-colors',
+                    insightFreshness === 'evergreen'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80'
+                  )}
+                >
+                  {t('content.insightDialog.evergreen')}
+                </button>
+              </div>
+            </div>
+
+            {/* Expiry date (only when time_sensitive) */}
+            {insightFreshness === 'time_sensitive' && (
+              <div className="space-y-1.5">
+                <label className="text-body-m font-medium">{t('content.insightDialog.expiresAt')}</label>
+                <Input
+                  type="date"
+                  value={insightExpiryDate}
+                  onChange={(e) => setInsightExpiryDate(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Tags */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.tags')}</label>
+              <Input
+                value={insightTags}
+                onChange={(e) => setInsightTags(e.target.value)}
+                placeholder={t('content.insightDialog.tagsHint')}
+              />
+              <p className="text-caption text-muted-foreground">{t('content.insightDialog.tagsHint')}</p>
+            </div>
+
+            {/* Suggested platforms */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.platforms')}</label>
+              <div className="flex flex-wrap gap-2">
+                {PLATFORM_OPTIONS.map(({ value, labelKey }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => togglePlatform(value)}
+                    className={cn(
+                      'px-3 py-1.5 text-sm rounded-md border transition-colors',
+                      insightPlatforms.includes(value)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border hover:bg-muted'
+                    )}
+                  >
+                    {t(labelKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-1.5">
+              <label className="text-body-m font-medium">{t('content.insightDialog.priority')}</label>
+              <Select value={insightPriority} onChange={(e) => setInsightPriority(e.target.value)}>
+                <option value="low">{t('common.priorityLabels.low')}</option>
+                <option value="medium">{t('common.priorityLabels.medium')}</option>
+                <option value="high">{t('common.priorityLabels.high')}</option>
+                <option value="urgent">{t('common.priorityLabels.urgent')}</option>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={handleInsightSubmit}
+              disabled={!insightTitle.trim() || createTopicBankItem.isPending}
+            >
+              {createTopicBankItem.isPending && <Loader2 className="w-4 h-4 me-1 animate-spin" />}
+              {t('content.insightDialog.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,0 +1,79 @@
+// E22 — TopicBank: Dynamic content repository for topics/angles from various sources.
+{
+  "name": "TopicBank",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Topic/angle title",
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "description": "Extended description of the topic and why it matters"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["trend", "manual_insight", "external_article", "commit_analysis", "signal"],
+      "description": "How this topic entered the bank"
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Link to original source"
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Name of organization/publication/person"
+    },
+    "freshness": {
+      "type": "string",
+      "enum": ["time_sensitive", "evergreen"],
+      "default": "evergreen",
+      "description": "Whether this topic is time-bound or always relevant"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this topic becomes stale (time_sensitive only)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["new", "planned", "used", "expired", "dismissed"],
+      "default": "new"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Topic tags for categorization"
+    },
+    "suggested_platforms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["linkedin_personal", "linkedin_business", "facebook_personal", "facebook_business", "blog", "newsletter"]
+      }
+    },
+    "suggested_tone": {
+      "type": "string",
+      "enum": ["professional", "personal", "educational", "community"]
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "he", "both"],
+      "default": "both"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "urgent"],
+      "default": "medium",
+      "description": "Urgency level"
+    },
+    "used_in_content_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ContentItem IDs generated from this topic"
+    }
+  },
+  "required": ["title", "source_type", "freshness", "status"]
+}
