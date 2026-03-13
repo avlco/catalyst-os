@@ -31,4 +31,5 @@ export const backendFunctions = {
   verifyLinkedInConnection: (data) => invoke('verify-linkedin-connection', data || {}),
   publishToLinkedIn: (data) => invoke('publish-to-linkedin', data),
   autoPublishScheduled: (data) => invoke('auto-publish-scheduled', data || {}),
+  batchGenerateContent: (data) => invoke('batch-generate-content', data),
 };
